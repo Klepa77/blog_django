@@ -1,4 +1,5 @@
 {% extends 'layout.html' %}
+{% load static %}
 {% block content %}
 <main class="max-w-6xl mx-auto px-6 py-14">
         <div class="text-center mb-12">
@@ -10,7 +11,7 @@
         </div>
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
             {% for article in posts %}
-            <a href="{{ article.get_absolute_url }}"
+            <a href="{% url 'articles:post' article.pk %}"
                class="group block bg-slate-800/60 border border-white/[0.08] rounded-2xl p-6 hover:-translate-y-1 hover:border-white/[0.15] transition-all duration-200">
 
                 <div class="flex items-center gap-3 mb-4">
@@ -41,12 +42,13 @@
                         </svg>
                         {{ article.date }}
                     </span>
-                    <a class="text-xs font-medium text-indigo-400 flex items-center gap-1 group-hover:gap-2 transition-all">
+                    <span data-id="{{ article.id }}"
+                            class="post-link text-xs font-medium text-indigo-400 flex items-center gap-1 group-hover:gap-2 transition-all">
                         Читать
                         <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
                         </svg>
-                    </a>
+                    </span>
                 </div>
 
             </a>
@@ -56,4 +58,7 @@
         </div>
 
     </main>
+{% endblock %}
+{% block script %}
+<script src="{% static 'js/home.js' %}"></script>
 {% endblock %}
