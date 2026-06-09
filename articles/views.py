@@ -1,4 +1,6 @@
-from django.shortcuts import render, get_object_or_404
+from django.shortcuts import render, get_object_or_404, redirect
+
+from articles import forms
 from articles.models import Post
 from django.http import HttpResponse, JsonResponse
 
@@ -20,3 +22,10 @@ def post(request,pk):
     except Post.DoesNotExist:
         prev_post = None
     return render(request, 'post.html', {'post': post_data, 'next_post': next_post, 'prev_post': prev_post})
+
+def post_create(request):
+   form = forms.PostForm(request.POST or None, request.FILES)
+   if request.method == 'POST' and form.is_valid():
+       form.save()
+       return redirect('articles:home')
+   return render(request, 'post_create.html', {'form': form})
