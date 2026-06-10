@@ -45,7 +45,12 @@
                 Поделиться
             </button>
             {% if request.user == post.author %}
-            <a href=""
+            <button onclick="document.getElementById('delete-modal').classList.remove('hidden')"
+                    class="text-sm text-red-400 border border-red-500/30 hover:bg-red-500/10
+               rounded-lg px-3 py-1.5 transition-colors">
+                Удалить
+            </button>
+            <a href="{% url 'articles:post_edit' post.pk %}"
                class="text-sm text-indigo-400 border border-indigo-500/30 hover:bg-indigo-500/10
                       rounded-lg px-3 py-1.5 transition-colors">
                 Редактировать
@@ -126,4 +131,98 @@
     {% endif %}
 
 </div>
+<div id="delete-modal"
+     class="hidden fixed inset-0 z-50 flex items-center justify-center
+            bg-black/60 backdrop-blur-sm px-4">
+
+    <div class="bg-slate-800 border border-white/[0.08] rounded-2xl
+                p-6 w-full max-w-sm shadow-xl">
+
+        <!-- Заголовок -->
+        <div class="flex items-center justify-between mb-5">
+            <div class="flex items-center gap-3">
+                <div class="w-9 h-9 rounded-xl bg-red-500/10 flex items-center
+                            justify-center flex-shrink-0">
+                    <svg class="w-5 h-5 text-red-400" fill="none"
+                         stroke="currentColor"
+                         viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round"
+                              stroke-width="2"
+                              d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2
+                                 0 01-1.995-1.858L5 7m5 4v6m4-6v6M9 7V4h6v3M3
+                                 7h18"/>
+                    </svg>
+                </div>
+                <h3 class="text-slate-100 font-medium">Удалить статью</h3>
+            </div>
+            <button onclick="document.getElementById('delete-modal').classList.add('hidden')"
+                    class="text-slate-500 hover:text-slate-300 transition-colors p-1
+                           rounded-lg hover:bg-white/5">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor"
+                     viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round"
+                          stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                </svg>
+            </button>
+        </div>
+
+        <!-- Текст -->
+        <p class="text-slate-400 text-sm leading-relaxed mb-4">
+            Вы уверены, что хотите удалить статью
+            <span class="text-slate-200 font-medium">«{{ post.title }}»</span>?
+            Это действие необратимо.
+        </p>
+
+        <!-- Предупреждение -->
+        <div class="bg-red-500/[0.07] border border-red-500/20 rounded-xl
+                    px-3 py-2.5 flex items-start gap-2 mb-5">
+            <svg class="w-4 h-4 text-red-400 flex-shrink-0 mt-0.5" fill="none"
+                 stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M12 9v2m0 4h.01M10.29 3.86L1.82
+                         18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71
+                         3.86a2 2 0 00-3.42 0z"/>
+            </svg>
+            <p class="text-red-300 text-xs leading-relaxed">
+                Статья, все её данные и изображения будут удалены без
+                возможности
+                восстановления.
+            </p>
+        </div>
+
+        <form method="post" action="{% url 'articles:post_delete' post.pk %}">
+            {% csrf_token %}
+            <div class="flex gap-2">
+                <button type="button"
+                        onclick="document.getElementById('delete-modal').classList.add('hidden')"
+                        class="flex-1 text-sm text-slate-400 border border-white/10
+                       hover:bg-white/5 rounded-xl px-4 py-2.5 transition-colors">
+                    Отмена
+                </button>
+
+                <button type="submit"
+                        class="flex-1 text-sm text-red-400 font-medium border
+                       border-red-500/30 hover:bg-red-500/10 rounded-xl
+                       px-4 py-2.5 transition-colors flex items-center
+                       justify-center gap-1.5">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor"
+                         viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round"
+                              stroke-width="2"
+                              d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2
+                         0 01-1.995-1.858L5 7m5 4v6m4-6v6M9 7V4h6v3M3 7h18"/>
+                    </svg>
+                    Удалить
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
+{% block script %}
+<script src="{% static 'js/post.js' %}">
+
+
+</script>
 {% endblock %}

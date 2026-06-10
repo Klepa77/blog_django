@@ -11,7 +11,8 @@ def home(request):
     posts = Post.objects.all()
     return render(request, 'home.html', {'posts': posts})
 
-def post(request,pk):
+
+def post(request, pk):
     post_data = get_object_or_404(Post, pk=pk)
     try:
         next_post = post_data.get_next_by_date_created()
@@ -21,11 +22,33 @@ def post(request,pk):
         prev_post = post_data.get_previous_by_date_created()
     except Post.DoesNotExist:
         prev_post = None
-    return render(request, 'post.html', {'post': post_data, 'next_post': next_post, 'prev_post': prev_post})
+    return render(request, 'post.html',
+                  {'post': post_data, 'next_post': next_post,
+                   'prev_post': prev_post})
+
 
 def post_create(request):
-   form = forms.PostForm(request.POST or None, request.FILES)
-   if request.method == 'POST' and form.is_valid():
-       form.save()
-       return redirect('articles:home')
-   return render(request, 'post_create.html', {'form': form})
+    form = forms.PostForm(request.POST or None, request.FILES)
+    if request.method == 'POST' and form.is_valid():
+        form.save()
+        return redirect('articles:home')
+    return render(request, 'post_create.html', {'form': form})
+
+
+def post_edit(request, pk):
+    article = Post.objects.get( pk=pk)
+    form = forms.PostForm(request.POST or None, request.FILES or None,
+                          instance=article)
+    if form.is_valid():
+        form.save()
+        return redirect('articles:home')
+    return render(
+        request,
+        'post_edit.html',
+        {'form': form, 'article': article})
+
+def post_delete(request, pk):
+    article = Post.objects.get( pk=pk)
+    if request.method == "POST":
+        article.delete()
+    return redirect('articles:home')
