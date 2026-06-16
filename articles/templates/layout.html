@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Статьи</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="{% static 'style.css' %}">
 </head>
 <body class="min-h-screen bg-slate-900">
 
@@ -34,8 +35,16 @@
                 </svg>
                 Новый пост
             </a>
-            <a href="#"
+            {% if not user.is_authenticated %}
+            <a href="{% url 'users:sign_in' %}"
                class="text-sm font-medium bg-indigo-500 hover:bg-indigo-400 text-white px-4 py-2 rounded-lg transition-colors">Войти</a>
+            {% else %}
+            <a href="{% url 'users:sign_out' %}"
+               class="text-sm font-medium bg-red-500 hover:bg-red-400
+          text-white px-4 py-2 rounded-lg transition-colors">
+                Выйти
+            </a>
+            {% endif %}
         </div>
     </div>
 </nav>

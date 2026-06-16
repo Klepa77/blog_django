@@ -1,0 +1,55 @@
+{% extends "layout.html" %}
+
+{% block content %}
+<div class="min-h-screen flex items-center justify-center px-4">
+
+    <div class="w-full max-w-sm bg-slate-800/60 border border-white/[0.08]
+                rounded-2xl p-6 backdrop-blur-sm">
+
+        <div class="text-center mb-6">
+            <h1 class="text-2xl font-semibold text-slate-100 mb-2">
+                Вход
+            </h1>
+        </div>
+
+        <form method="post" class="space-y-4">
+            {% csrf_token %}
+
+            {% for field in form %}
+            <div>
+                <label class="block text-sm text-slate-300 mb-2">
+                    {{ field.label }}
+                </label>
+
+                {{ field }}
+
+                {% if field.errors %}
+                <p class="text-red-400 text-sm mt-1">
+                    {{ field.errors|striptags }}
+                </p>
+                {% endif %}
+            </div>
+            {% endfor %}
+
+            <button type="submit"
+                    class="w-full bg-indigo-600 hover:bg-indigo-500
+                           text-white font-medium rounded-xl py-2.5
+                           transition-colors">
+                Войти
+            </button>
+        </form>
+
+        <div class="mt-5 pt-5 border-t border-white/[0.08] text-center">
+            <p class="text-slate-400 text-sm">
+                Нет аккаунта?
+                <a href="{% url 'users:sign_up' %}"
+                   class="text-indigo-400 hover:text-indigo-300 transition-colors">
+                    Создать аккаунт
+                </a>
+            </p>
+        </div>
+
+    </div>
+
+</div>
+{% endblock %}
