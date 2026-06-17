@@ -22,3 +22,6 @@ def sign_in(request):
 def sign_out(request):
     logout(request)
     return redirect('users:sign_in')
+
+def forbidden(request):
+    return render(request, '403.html')
