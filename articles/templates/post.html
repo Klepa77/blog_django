@@ -64,6 +64,157 @@
     <div class="text-slate-300 text-base leading-relaxed space-y-4 mb-10">
         {{ post.text|linebreaks }}
     </div>
+    <section class="mt-12">
+
+        <div class="flex items-center justify-between mb-6">
+            <h2 class="text-xl font-semibold text-slate-100">
+                Комментарии
+            </h2>
+
+            <span class="text-sm text-slate-500">
+            {{ comments.count }} комментариев
+        </span>
+        </div>
+
+        {% if request.user.is_authenticated %}
+        <form action="{% url 'articles:comment_create' post.pk %}"
+              method="post"
+              class="bg-slate-800/60 border border-white/[0.08]
+                 rounded-2xl p-4 mb-6">
+
+            {% csrf_token %}
+
+            <div class="flex gap-3">
+
+                {% if request.user.profile.avatar %}
+                <img src="{{ request.user.profile.avatar.url }}"
+                     alt="{{ request.user.username }}"
+                     class="w-10 h-10 rounded-full object-cover flex-shrink-0">
+                {% else %}
+                <div class="w-10 h-10 rounded-full
+                        bg-indigo-500/20 text-indigo-400
+                        flex items-center justify-center
+                        font-medium flex-shrink-0">
+                    {{ request.user.username|slice:":2"|upper }}
+                </div>
+                {% endif %}
+
+                <div class="flex-1">
+
+                <textarea
+                        name="body"
+                        required
+                        rows="3"
+                        placeholder="Напишите комментарий..."
+                        class="w-full bg-slate-900/50 border
+                               border-white/[0.08]
+                               rounded-xl px-4 py-3
+                               text-slate-200
+                               placeholder:text-slate-500
+                               focus:outline-none
+                               focus:border-indigo-500/40
+                               resize-none"></textarea>
+
+                    <div class="flex justify-end mt-3">
+                        <button type="submit"
+                                class="px-4 py-2 rounded-xl
+                                   bg-indigo-500/10
+                                   border border-indigo-500/30
+                                   text-indigo-400
+                                   hover:bg-indigo-500/20
+                                   transition-colors">
+                            Отправить
+                        </button>
+                    </div>
+
+                </div>
+            </div>
+
+        </form>
+        {% endif %}
+
+
+        <div class="space-y-4">
+
+            {% for comment in comments %}
+            <article class="bg-slate-800/40
+                         border border-white/[0.08]
+                         rounded-2xl p-4">
+
+                <div class="flex gap-3">
+
+                    {% if comment.author.profile.avatar %}
+                    <img src="{{ comment.author.profile.avatar.url }}"
+                         alt="{{ comment.author.username }}"
+                         class="w-10 h-10 rounded-full object-cover">
+                    {% else %}
+                    <div class="w-10 h-10 rounded-full
+                            bg-indigo-500/20
+                            text-indigo-400
+                            flex items-center justify-center
+                            font-medium flex-shrink-0">
+                        {{ comment.author.username|slice:":2"|upper }}
+                    </div>
+                    {% endif %}
+
+                    <div class="flex-1">
+
+                        <div class="flex justify-between gap-2 mb-2">
+
+                            <div>
+
+                        <span class="font-medium text-slate-200">
+                            {{ comment.user.username }}
+                        </span>
+
+                                <span class="text-xs text-slate-500">
+                            {{ comment.date_created|date:"d M Y H:i" }}
+                        </span>
+                            </div>
+                            <div>
+                                {% if request.user == comment.user %}
+                                <button onclick=""
+                                        class="text-sm text-red-400 border border-red-500/30 hover:bg-red-500/10
+               rounded-lg px-3 py-1.5 transition-colors">
+                                    Удалить
+                                </button>
+                                <a href=""
+                                   class="text-sm text-indigo-400 border border-indigo-500/30 hover:bg-indigo-500/10
+                      rounded-lg px-3 py-1.5 transition-colors">
+                                    Редактировать
+                                </a>
+                                {% endif %}
+                            </div>
+
+                        </div>
+
+                        <p class="text-slate-300 leading-relaxed">
+                            {{ comment.body|linebreaksbr }}
+                        </p>
+
+                    </div>
+
+                </div>
+
+            </article>
+            {% empty %}
+
+            <div class="bg-slate-800/30
+                    border border-dashed border-white/[0.08]
+                    rounded-2xl p-8 text-center">
+
+                <p class="text-slate-500">
+                    Пока нет комментариев.
+                    Будьте первым 👀
+                </p>
+
+            </div>
+
+            {% endfor %}
+
+        </div>
+
+    </section>
     <div class="border-t border-white/[0.08] pt-8 flex items-center justify-between flex-wrap gap-4">
         <div class="flex items-center gap-3">
             {% if post.author.profile.avatar %}

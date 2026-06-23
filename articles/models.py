@@ -26,3 +26,13 @@ class Person(models.Model):
     def __str__(self):
         return f"{self.name} {self.last_name}"
 
+
+class Comment(models.Model):
+    post = models.ForeignKey(Post, on_delete=models.CASCADE,null=True)
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    body = models.TextField()
+    date_created = models.DateTimeField(auto_now_add=True)
+    date_updated = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return f"{self.post}-{self.body[:5]}"

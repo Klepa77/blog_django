@@ -1,7 +1,7 @@
 from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib.auth.decorators import login_required
 from articles import forms
-from articles.models import Post
+from articles.models import Post,Comment
 from django.http import HttpResponse, JsonResponse
 
 
@@ -14,6 +14,7 @@ def home(request):
 
 def post(request, pk):
     post_data = get_object_or_404(Post, pk=pk)
+    comments = Comment.objects.filter(post=post_data)
     try:
         next_post = post_data.get_next_by_date_created()
     except Post.DoesNotExist:
@@ -24,7 +25,7 @@ def post(request, pk):
         prev_post = None
     return render(request, 'post.html',
                   {'post': post_data, 'next_post': next_post,
-                   'prev_post': prev_post})
+                   'prev_post': prev_post,'comments': comments})
 
 
 @login_required(login_url='/users/sign_in')
@@ -65,3 +66,17 @@ def post_delete(request, pk):
     if request.method == "POST":
         article.delete()
     return redirect('articles:home')
+
+
+def comment_create(request,post_pk):
+    post_data = Post.objects.get(pk=post_pk)
+    body = request.POST.get('body')
+
+    if request.method == 'POST':
+        instance = Comment()
+        instance.user = request.user
+        instance.post = post_data
+        instance.body = body
+        instance.save()
+    return redirect('articles:post', pk=post_pk)
+
