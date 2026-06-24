@@ -10,6 +10,8 @@ urlpatterns=[
     path('post_delete/<int:pk>',views.post_delete,name='post_delete'),
     path('comment_create/<int:post_pk>',views.comment_create,
          name='comment_create'),
+    path('comment_delete/<int:comment_pk>',views.comment_delete,
+         name='comment_delete'),
 
 
 

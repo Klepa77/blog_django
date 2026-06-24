@@ -80,3 +80,10 @@ def comment_create(request,post_pk):
         instance.save()
     return redirect('articles:post', pk=post_pk)
 
+
+def comment_delete(request,comment_pk):
+    comment = Comment.objects.get(pk=comment_pk)
+    if request.method == "POST":
+        comment.delete()
+    return redirect('articles:post', pk=comment.post.pk)
+
