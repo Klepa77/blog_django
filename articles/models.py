@@ -10,6 +10,8 @@ class Post(models.Model):
     author = models.ForeignKey(User, on_delete=models.CASCADE)
     image = models.ImageField(default='default.jpg',upload_to="posts",
                               blank=True)
+    likes = models.ManyToManyField(User, related_name='likes')
+    dislikes = models.ManyToManyField(User, related_name='dislikes')
 
 
     def __str__(self):
@@ -34,5 +36,8 @@ class Comment(models.Model):
     date_created = models.DateTimeField(auto_now_add=True)
     date_updated = models.DateTimeField(auto_now=True)
 
+
     def __str__(self):
         return f"{self.post}-{self.body[:5]}"
+
+

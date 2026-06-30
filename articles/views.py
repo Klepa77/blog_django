@@ -80,10 +80,33 @@ def comment_create(request,post_pk):
         instance.save()
     return redirect('articles:post', pk=post_pk)
 
-
+@login_required(login_url='/users/sign_in')
 def comment_delete(request,comment_pk):
     comment = Comment.objects.get(pk=comment_pk)
+    if comment.user != request.user:
+        return redirect('users:forbidden')
+
     if request.method == "POST":
         comment.delete()
     return redirect('articles:post', pk=comment.post.pk)
 
+def like(request,pk):
+    article = Post.objects.get(pk=pk)
+
+    if request.user not in article.likes.all():
+        article.likes.add(request.user)
+        article.dislikes.remove(request.user)
+    else:
+        article.likes.remove(request.user)
+    return redirect('articles:post', pk=pk)
+
+def dislike(request,pk):
+    article = Post.objects.get(pk=pk)
+
+    if request.user not in article.dislikes.all():
+        article.dislikes.add(request.user)
+        article.likes.remove(request.user)
+    else:
+        article.dislikes.remove(request.user)
+
+    return redirect('articles:post', pk=pk)
