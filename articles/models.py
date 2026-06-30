@@ -35,6 +35,8 @@ class Comment(models.Model):
     body = models.TextField()
     date_created = models.DateTimeField(auto_now_add=True)
     date_updated = models.DateTimeField(auto_now=True)
+    likes = models.ManyToManyField(User, related_name='comment_likes')
+    dislikes = models.ManyToManyField(User, related_name='comment_islikes')
 
 
     def __str__(self):

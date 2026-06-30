@@ -110,3 +110,22 @@ def dislike(request,pk):
         article.dislikes.remove(request.user)
 
     return redirect('articles:post', pk=pk)
+
+
+def comment_likes(request,pk):
+    comment = Comment.objects.get(pk=pk)
+    if request.user not in comment.likes.all():
+        comment.likes.add(request.user)
+        comment.dislikes.remove(request.user)
+    else:
+        comment.likes.remove(request.user)
+    return redirect('articles:post', pk=comment.post.pk)
+
+def comment_dislikes(request,pk):
+    comment = Comment.objects.get(pk=pk)
+    if request.user not in comment.dislikes.all():
+        comment.dislikes.add(request.user)
+        comment.likes.remove(request.user)
+    else:
+        comment.dislikes.remove(request.user)
+    return redirect('articles:post', pk=comment.post.pk)

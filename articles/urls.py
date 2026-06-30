@@ -14,6 +14,8 @@ urlpatterns=[
          name='comment_delete'),
     path('likes/<int:pk>',views.like,name='likes'),
     path('dislikes/<int:pk>',views.dislike,name='dislikes'),
+    path('comment_likes/<int:pk>',views.comment_likes,name='comment_likes'),
+    path('comment_dislikes/<int:pk>',views.comment_dislikes,name='comment_dislikes'),
 
 
 
