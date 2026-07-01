@@ -2,13 +2,18 @@ from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib.auth.decorators import login_required
 from articles import forms
 from articles.models import Post,Comment
+from django .db.models import Q
 from django.http import HttpResponse, JsonResponse
 
 
 # Create your views here.
 
 def home(request):
-    posts = Post.objects.all()
+    search = request.GET.get('search')
+    posts = Post.objects.all().order_by('-date_created')
+    posts = posts.filter(title__icontains=search) if search else posts
+    print(search)
+
     return render(request, 'home.html', {'posts': posts})
 
 
