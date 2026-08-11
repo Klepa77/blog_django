@@ -1,7 +1,7 @@
 from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib.auth.decorators import login_required
 from articles import forms
-from articles.models import Post,Comment
+from articles.models import Post, Comment, Category
 from django .db.models import Q
 from django.http import HttpResponse, JsonResponse
 
@@ -10,11 +10,14 @@ from django.http import HttpResponse, JsonResponse
 
 def home(request):
     search = request.GET.get('search')
+    category = request.GET.get('category')
     posts = Post.objects.all().order_by('-date_created')
     posts = posts.filter(title__icontains=search) if search else posts
-    print(search)
+    posts = posts.filter(category=category) if category else posts
+    categories=Category.objects.all()
 
-    return render(request, 'home.html', {'posts': posts})
+    return render(request, 'home.html', {'posts': posts,
+                                         'categories':categories})
 
 
 def post(request, pk):
