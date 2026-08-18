@@ -1,7 +1,7 @@
 from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib.auth.decorators import login_required
 from articles import forms
-from articles.models import Post, Comment, Category
+from articles.models import Post, Comment, Category, Tag
 from django .db.models import Q
 from django.http import HttpResponse, JsonResponse
 
@@ -17,7 +17,8 @@ def home(request):
     categories=Category.objects.all()
 
     return render(request, 'home.html', {'posts': posts,
-                                         'categories':categories})
+                                         'categories':categories,
+                                         'category':category,'search':search})
 
 
 def post(request, pk):
@@ -137,3 +138,10 @@ def comment_dislikes(request,pk):
     else:
         comment.dislikes.remove(request.user)
     return redirect('articles:post', pk=comment.post.pk)
+
+
+def fetch_tags(request):
+    search = request.GET.get('search')
+    tags = Tag.objects.filter(name__icontains=search)
+    tags = list(tags.values_list('name', flat=True))if search else []
+    return JsonResponse({'tags': tags, 'count': len(tags)})

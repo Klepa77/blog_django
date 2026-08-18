@@ -13,6 +13,7 @@ class Post(models.Model):
     likes = models.ManyToManyField(User, related_name='likes', blank=True)
     dislikes = models.ManyToManyField(User, related_name='dislikes',blank=True)
     category = models.ForeignKey('articles.Category',null=True,on_delete=models.CASCADE)
+    tags = models.ManyToManyField('articles.Tag',related_name='tags',blank=True)
 
 
     def __str__(self):
@@ -45,6 +46,14 @@ class Comment(models.Model):
 
 
 class Category(models.Model):
+    name = models.CharField(max_length=255)
+
+
+    def __str__(self):
+        return self.name
+
+
+class Tag(models.Model):
     name = models.CharField(max_length=255)
 
     def __str__(self):
