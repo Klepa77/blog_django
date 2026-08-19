@@ -32,42 +32,24 @@
         </div>
         {% endfor %}
         <div class="flex flex-col gap-2">
+            <label class="text-sm font-medium text-slate-300">Теги</label>
 
-            <label for="{{ form.tags.id_for_label }}"
-                   class="text-sm font-medium text-slate-300">
-                Теги
-            </label>
-
-            <input
-                    type="text"
-                    name="tags"
-                    id="{{ form.tags.id_for_label }}"
-                    value="{{ form.tags.value|default:'' }}"
-                    placeholder="Например: Python, Django, HTML"
-                    class="w-full
-               bg-slate-800/70
-               border border-white/[0.08]
-               rounded-xl
-               px-4 py-3
-               text-sm text-slate-200
-               placeholder:text-slate-500
-               outline-none
-               transition-all
-               focus:border-indigo-500/50
-               focus:ring-2
-               focus:ring-indigo-500/20
-               hover:border-white/[0.15]">
-
-            <p class="text-xs text-slate-500">
-                Укажите теги через запятую
-            </p>
-
-            {% if form.tags.errors %}
-            <div class="text-sm text-red-400">
-                {{ form.tags.errors }}
+            <!-- отдельный wrapper именно для чипов + инпута -->
+            <div id="tagsBox"
+                 class="flex flex-wrap items-center gap-2 bg-slate-800/70 border border-white/[0.08] rounded-xl px-3 py-2 min-h-[46px] focus-within:border-indigo-500/50 focus-within:ring-2 focus-within:ring-indigo-500/20 transition-all">
+                <input
+                        type="text"
+                        id="tagInput"
+                        placeholder="Например: Python, Django, HTML"
+                        class="flex-1 min-w-[100px] bg-transparent outline-none text-sm text-slate-200 placeholder:text-slate-500 py-1">
             </div>
-            {% endif %}
 
+            <div id="suggestions"
+                 class="hidden mt-1 bg-slate-900 border border-slate-700 rounded-lg overflow-hidden shadow-lg max-h-48 overflow-y-auto">
+            </div>
+
+            <p class="text-xs text-slate-500 mt-2">Enter — добавить · Backspace
+                — удалить последний тег</p>
         </div>
 
         <div class="flex items-center gap-3 pt-2 border-t border-white/[0.08]">
@@ -89,7 +71,7 @@
 {% block script %}
 <script>
     const csrfToken = getCookie('csrftoken');
-    let input = document.querySelector("[name='tags']")
+    let input = document.querySelector("#tagInput")
     input.addEventListener('input', (event) => {
         let value = event.target.value
         if (value.length > 2) {
@@ -107,8 +89,8 @@
                         return res.json()
                     }
                 })
-                .then((data)=>{
-                    console.log(data)
+                .then((data) => {
+                    renderSuggestions(data.tags)
                 })
                 .catch(error => console.warn(error))
 
@@ -128,6 +110,112 @@
             return null;
         }
         return decodeURIComponent(xsrfCookies[0].split('=')[1]);
+    }
+
+    let suggestionsBox = document.querySelector('#suggestions')
+    let allTags = []
+
+    function renderSuggestions(tags) {
+        // tags — массив тегов, пришедший с бэкенда
+        currentSuggestions = (tags || []).filter(t => !selectedTags.includes(t));
+        activeSuggestionIndex = -1; // сброс при каждом новом списке
+
+        if (currentSuggestions.length === 0) {
+            suggestionsBox.classList.add("hidden");
+            suggestionsBox.innerHTML = "";
+            return;
+        }
+
+        renderSuggestionList();
+        suggestionsBox.classList.remove("hidden");
+    }
+
+    let selectedTags = []
+    let tagInput = document.getElementById('tagInput')
+
+    function addTag(tag) {
+        tag = tag.trim();
+        if (!tag || selectedTags.includes(tag)) {
+            return;
+        }
+        selectedTags.push(tag);
+        tagInput.value = '';
+        renderSuggestions([]); // явно пустой массив, а не строка
+        renderTags();
+    }
+
+    let tagsBox = document.getElementById('tagsBox')
+
+    function renderTags() {
+        [...tagsBox.querySelectorAll('.tag-chip')].forEach((el) => {
+            el.remove()
+        })
+        selectedTags.forEach((tag, index) => {
+            const chip = document.createElement("span");
+            chip.className = "tag-chip flex items-center gap-1 bg-indigo-500/15 text-indigo-300 text-sm px-2 py-1 rounded-md";
+            chip.innerHTML = `
+        <span>${tag}</span>
+        <button type="button" data-index="${index}"
+          class="remove-tag text-indigo-400 hover:text-indigo-100 leading-none">&times;</button>
+      `;
+            tagsBox.insertBefore(chip, tagInput);
+        });
+        tagsBox.querySelectorAll('.remove-tag').forEach((btn) => {
+            btn.addEventListener('click', () => {
+                selectedTags.splice(Number(btn.dataset.index), 1);
+                renderTags()
+            })
+        })
+    }
+
+    tagInput.addEventListener("keydown", (e) => {
+        const hasSuggestions = currentSuggestions.length > 0 && !suggestionsBox.classList.contains("hidden");
+
+        if (e.key === "ArrowDown" && hasSuggestions) {
+            e.preventDefault();
+            activeSuggestionIndex = (activeSuggestionIndex + 1) % currentSuggestions.length;
+            renderSuggestionList();
+        }
+
+        if (e.key === "ArrowUp" && hasSuggestions) {
+            e.preventDefault();
+            activeSuggestionIndex = (activeSuggestionIndex - 1 + currentSuggestions.length) % currentSuggestions.length;
+            renderSuggestionList();
+        }
+
+        if (e.key === "Enter") {
+            e.preventDefault();
+            if (hasSuggestions && activeSuggestionIndex >= 0) {
+                // есть выделенная подсказка — берём её
+                addTag(currentSuggestions[activeSuggestionIndex]);
+            } else if (hasSuggestions && currentSuggestions.length > 0) {
+                // подсказки есть, но ничего не выделено — берём первую
+                addTag(currentSuggestions[0]);
+            } else {
+                // подсказок нет вообще — добавляем то, что ввёл руками
+                addTag(tagInput.value);
+            }
+        }
+
+        if (e.key === "Backspace" && tagInput.value === "" && selectedTags.length) {
+            selectedTags.pop();
+            renderTags();
+        }
+    });
+    let activeSuggestionIndex = -1;
+    let currentSuggestions = [];
+
+    function renderSuggestionList() {
+        suggestionsBox.innerHTML = currentSuggestions
+            .map((t, i) => `
+      <div class="suggestion-item px-3 py-2 text-sm cursor-pointer
+                   ${i === activeSuggestionIndex ? "bg-indigo-500/20 text-indigo-100" : "text-slate-200 hover:bg-indigo-500/10"}"
+           data-tag="${t}">${t}</div>
+    `).join("");
+
+        suggestionsBox.querySelectorAll(".suggestion-item").forEach(item => {
+            item.addEventListener("click", () => addTag(item.dataset.tag));
+        });
     }
 </script>
 {% endblock %}
