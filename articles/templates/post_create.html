@@ -43,6 +43,7 @@
                         placeholder="Например: Python, Django, HTML"
                         class="flex-1 min-w-[100px] bg-transparent outline-none text-sm text-slate-200 placeholder:text-slate-500 py-1">
             </div>
+            <input type="hidden" name="tags" id="tags" value="">
 
             <div id="suggestions"
                  class="hidden mt-1 bg-slate-900 border border-slate-700 rounded-lg overflow-hidden shadow-lg max-h-48 overflow-y-auto">
@@ -145,6 +146,7 @@
     }
 
     let tagsBox = document.getElementById('tagsBox')
+    let tagHidden = document.getElementById('tags')
 
     function renderTags() {
         [...tagsBox.querySelectorAll('.tag-chip')].forEach((el) => {
@@ -166,6 +168,7 @@
                 renderTags()
             })
         })
+        tagHidden.value=selectedTags.join(',')
     }
 
     tagInput.addEventListener("keydown", (e) => {

@@ -44,6 +44,9 @@ def post_create(request):
         instance = form.save(commit=False)
         instance.author = request.user
         instance.save()
+        raw_tags = request.POST.get("tags", "")
+        tag_objects = resolve_tags(raw_tags)
+        instance.tags.set(tag_objects)
         return redirect('articles:home')
     return render(request, 'post_create.html', {'form': form})
 
@@ -145,3 +148,17 @@ def fetch_tags(request):
     tags = Tag.objects.filter(name__icontains=search)
     tags = list(tags.values_list('name', flat=True))if search else []
     return JsonResponse({'tags': tags, 'count': len(tags)})
+
+
+def resolve_tags(raw: str) -> list[Tag]:
+    names = [name.strip() for name in raw.split(",") if name.strip()]
+    names = list(dict.fromkeys(names))  # убрать дубли, сохранив порядок
+
+    tag_objects = []
+    for name in names:
+        tag = Tag.objects.filter(name__iexact=name).first()
+        if not tag:
+            tag = Tag.objects.create(name=name)
+        tag_objects.append(tag)
+
+    return tag_objects
