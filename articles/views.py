@@ -11,9 +11,11 @@ from django.http import HttpResponse, JsonResponse
 def home(request):
     search = request.GET.get('search')
     category = request.GET.get('category')
+    tag = request.GET.get('tag')
     posts = Post.objects.all().order_by('-date_created')
     posts = posts.filter(title__icontains=search) if search else posts
     posts = posts.filter(category=category) if category else posts
+    posts = posts.filter(tags__name = tag) if tag else posts
     categories=Category.objects.all()
 
     return render(request, 'home.html', {'posts': posts,

@@ -4,33 +4,32 @@
 {% block content %}
 <div class="bg-slate-900 border-b border-white/10">
     <div class="max-w-6xl mx-auto px-6 py-4">
+        <form action="{% url 'articles:home' %}"
+              method="get"
+              class="flex flex-col sm:flex-row items-center gap-3">
 
-   <form action="{% url 'articles:home' %}"
-      method="get"
-      class="flex flex-col sm:flex-row items-center gap-3">
+            <!-- Поиск -->
+            <div class="relative w-full sm:flex-1">
 
-    <!-- Поиск -->
-    <div class="relative w-full sm:flex-1">
-
-        <svg class="absolute left-3 top-1/2 -translate-y-1/2
+                <svg class="absolute left-3 top-1/2 -translate-y-1/2
                     w-5 h-5 text-slate-500"
-             fill="none"
-             stroke="currentColor"
-             viewBox="0 0 24 24">
+                     fill="none"
+                     stroke="currentColor"
+                     viewBox="0 0 24 24">
 
-            <path stroke-linecap="round"
-                  stroke-linejoin="round"
-                  stroke-width="2"
-                  d="M21 21l-4.35-4.35M11 18a7 7 0 100-14 7 7 0 000 14z"/>
+                    <path stroke-linecap="round"
+                          stroke-linejoin="round"
+                          stroke-width="2"
+                          d="M21 21l-4.35-4.35M11 18a7 7 0 100-14 7 7 0 000 14z"/>
 
-        </svg>
+                </svg>
 
-        <input
-            type="search"
-            name="search"
-            value="{{ request.GET.search }}"
-            placeholder="Поиск статей..."
-            class="w-full bg-slate-800/70
+                <input
+                        type="search"
+                        name="search"
+                        value="{{ request.GET.search }}"
+                        placeholder="Поиск статей..."
+                        class="w-full bg-slate-800/70
                    border border-white/10
                    rounded-xl
                    pl-10 pr-24 py-2.5
@@ -41,29 +40,29 @@
                    focus:ring-2
                    focus:ring-indigo-500/20">
 
-        <button
-            type="submit"
-            class="absolute right-1 top-1/2 -translate-y-1/2
+                <button
+                        type="submit"
+                        class="absolute right-1 top-1/2 -translate-y-1/2
                    px-4 py-1.5
                    bg-indigo-500 hover:bg-indigo-400
                    text-white text-sm
                    rounded-lg transition">
 
-            Найти
+                    Найти
 
-        </button>
+                </button>
 
-    </div>
+            </div>
 
 
-    <!-- Категории -->
-    <div class="relative w-full sm:w-64">
+            <!-- Категории -->
+            <div class="relative w-full sm:w-64">
 
-        <select
-            id="category"
-            name="category"
-            onchange="this.form.submit()"
-            class="w-full appearance-none
+                <select
+                        id="category"
+                        name="category"
+                        onchange="this.form.submit()"
+                        class="w-full appearance-none
                    bg-slate-800/70
                    border border-white/[0.08]
                    text-slate-200
@@ -79,51 +78,72 @@
                    focus:ring-indigo-500/20
                    transition-all">
 
-            <option value="">
-                Все категории
-            </option>
+                    <option value="">
+                        Все категории
+                    </option>
 
-            {% for category in categories %}
+                    {% for category in categories %}
 
-                <option
-                    value="{{ category.id }}"
-                    {% if request.GET.category == category.id|stringformat:"s" %}
-                        selected
+                    <option
+                            value="{{ category.id }}" {% if request.GET.category == category.id|stringformat:"s" %}
+                    selected
                     {% endif %}>
 
                     {{ category }}
 
-                </option>
+                    </option>
 
-            {% endfor %}
+                    {% endfor %}
 
-        </select>
+                </select>
 
-        <!-- Стрелка -->
-        <svg
-            class="pointer-events-none
+                <!-- Стрелка -->
+                <svg
+                        class="pointer-events-none
                    absolute right-3 top-1/2
                    -translate-y-1/2
                    w-4 h-4 text-slate-500"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24">
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24">
 
-            <path stroke-linecap="round"
-                  stroke-linejoin="round"
-                  stroke-width="2"
-                  d="M19 9l-7 7-7-7"/>
+                    <path stroke-linecap="round"
+                          stroke-linejoin="round"
+                          stroke-width="2"
+                          d="M19 9l-7 7-7-7"/>
 
-        </svg>
+                </svg>
 
-    </div>
+            </div>
+            {% if request.GET.tag %}
+            <input type="hidden" name="tag" value="{{ request.GET.tag }}" >
+            {% endif %}
+            {% if request.GET.tag %}
+                <span class="w-full sm:w-auto flex-shrink-0
+                             inline-flex items-center justify-center gap-2
+                             px-4 py-2.5
+                             bg-indigo-500/10
+                             border border-indigo-500/30
+                             text-indigo-300
+                             text-sm font-medium
+                             rounded-xl
+                             whitespace-nowrap">
+                    #{{ selected_tag.name|default:request.GET.tag }}
+                    <a href="?{% if request.GET.search %}search={{ request.GET.search }}&{% endif %}{% if request.GET.category %}category={{ request.GET.category }}{% endif %}"
+                       class="text-indigo-400 hover:text-white transition-colors"
+                       aria-label="Убрать фильтр по тегу">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round"
+                                  stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                        </svg>
+                    </a>
+                </span>
+                {% endif %}
+            <!-- Очистить -->
+            {% if search or category or 'tag' in request.GET %}
 
-
-    <!-- Очистить -->
-    {% if search or category %}
-
-        <a href="{% url 'articles:home' %}"
-           class="w-full sm:w-auto
+            <a href="{% url 'articles:home' %}"
+               class="w-full sm:w-auto
                   inline-flex items-center justify-center
                   gap-2
                   px-4 py-2.5
@@ -137,27 +157,27 @@
                   whitespace-nowrap
                   transition-all">
 
-            <svg class="w-4 h-4"
-                 fill="none"
-                 stroke="currentColor"
-                 viewBox="0 0 24 24">
+                <svg class="w-4 h-4"
+                     fill="none"
+                     stroke="currentColor"
+                     viewBox="0 0 24 24">
 
-                <path stroke-linecap="round"
-                      stroke-linejoin="round"
-                      stroke-width="2"
-                      d="M6 18L18 6M6 6l12 12"/>
+                    <path stroke-linecap="round"
+                          stroke-linejoin="round"
+                          stroke-width="2"
+                          d="M6 18L18 6M6 6l12 12"/>
 
-            </svg>
+                </svg>
 
-            Очистить
+                Очистить
 
-        </a>
+            </a>
 
-    {% endif %}
+            {% endif %}
 
-</form>
+        </form>
 
-</div>
+    </div>
 
 
 </div>
@@ -190,8 +210,8 @@
 
         {% for article in posts %}
 
-        <a href="{% url 'articles:post' article.pk %}"
-           class="group block bg-slate-800/60
+        <div
+                class="group block bg-slate-800/60
               border border-white/[0.08]
               rounded-2xl p-6
               hover:-translate-y-1
@@ -246,10 +266,10 @@
                 {{ article.snippet }}
             </p>
             {% if article.tags.all %}
-    <div class="flex flex-wrap gap-2 mb-4">
+            <div class="flex flex-wrap gap-2 mb-4">
 
-        {% for tag in article.tags.all %}
-
+                {% for tag in article.tags.all %}
+                <a href="{% url 'articles:home' %}?tag={{ tag.name }}">
             <span class="
                 inline-flex items-center
                 px-2.5 py-1
@@ -265,14 +285,16 @@
             ">
                 #{{ tag.name }}
             </span>
+                </a>
 
-        {% endfor %}
+                {% endfor %}
 
-    </div>
-{% endif %}
+            </div>
+            {% endif %}
 
 
-            <div class="flex items-center justify-between
+            <a href="{% url 'articles:post' article.pk %}"
+               class="flex items-center justify-between
                     border-t border-white/[0.06] pt-4">
 
             <span class="text-xs text-slate-600
@@ -316,9 +338,9 @@
 
             </span>
 
-            </div>
+            </a>
 
-        </a>
+        </div>
 
         {% empty %}
 
