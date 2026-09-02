@@ -2,25 +2,34 @@ from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib.auth.decorators import login_required
 from articles import forms
 from articles.models import Post, Comment, Category, Tag
-from django .db.models import Q
+from django.db.models import Q
 from django.http import HttpResponse, JsonResponse
+from django.core.paginator import Paginator
 
 
 # Create your views here.
 
 def home(request):
+    page = request.GET.get('page')
     search = request.GET.get('search')
     category = request.GET.get('category')
     tag = request.GET.get('tag')
     posts = Post.objects.all().order_by('-date_created')
     posts = posts.filter(title__icontains=search) if search else posts
     posts = posts.filter(category=category) if category else posts
-    posts = posts.filter(tags__name = tag) if tag else posts
-    categories=Category.objects.all()
+    posts = posts.filter(tags__name=tag) if tag else posts
+    categories = Category.objects.all()
+    paginator = Paginator(posts, 3)
+    page_object = paginator.get_page(page)
 
-    return render(request, 'home.html', {'posts': posts,
-                                         'categories':categories,
-                                         'category':category,'search':search})
+    return render(request,
+                  'home.html',
+                  {'posts': page_object,
+                   'categories': categories,
+                   'category': category,
+                   'search': search,
+
+                   })
 
 
 def post(request, pk):
@@ -36,7 +45,7 @@ def post(request, pk):
         prev_post = None
     return render(request, 'post.html',
                   {'post': post_data, 'next_post': next_post,
-                   'prev_post': prev_post,'comments': comments})
+                   'prev_post': prev_post, 'comments': comments})
 
 
 @login_required(login_url='/users/sign_in')
@@ -82,7 +91,7 @@ def post_delete(request, pk):
     return redirect('articles:home')
 
 
-def comment_create(request,post_pk):
+def comment_create(request, post_pk):
     post_data = Post.objects.get(pk=post_pk)
     body = request.POST.get('body')
 
@@ -94,8 +103,9 @@ def comment_create(request,post_pk):
         instance.save()
     return redirect('articles:post', pk=post_pk)
 
+
 @login_required(login_url='/users/sign_in')
-def comment_delete(request,comment_pk):
+def comment_delete(request, comment_pk):
     comment = Comment.objects.get(pk=comment_pk)
     if comment.user != request.user:
         return redirect('users:forbidden')
@@ -104,7 +114,8 @@ def comment_delete(request,comment_pk):
         comment.delete()
     return redirect('articles:post', pk=comment.post.pk)
 
-def like(request,pk):
+
+def like(request, pk):
     article = Post.objects.get(pk=pk)
 
     if request.user not in article.likes.all():
@@ -114,7 +125,8 @@ def like(request,pk):
         article.likes.remove(request.user)
     return redirect('articles:post', pk=pk)
 
-def dislike(request,pk):
+
+def dislike(request, pk):
     article = Post.objects.get(pk=pk)
 
     if request.user not in article.dislikes.all():
@@ -126,7 +138,7 @@ def dislike(request,pk):
     return redirect('articles:post', pk=pk)
 
 
-def comment_likes(request,pk):
+def comment_likes(request, pk):
     comment = Comment.objects.get(pk=pk)
     if request.user not in comment.likes.all():
         comment.likes.add(request.user)
@@ -135,7 +147,8 @@ def comment_likes(request,pk):
         comment.likes.remove(request.user)
     return redirect('articles:post', pk=comment.post.pk)
 
-def comment_dislikes(request,pk):
+
+def comment_dislikes(request, pk):
     comment = Comment.objects.get(pk=pk)
     if request.user not in comment.dislikes.all():
         comment.dislikes.add(request.user)
@@ -148,7 +161,7 @@ def comment_dislikes(request,pk):
 def fetch_tags(request):
     search = request.GET.get('search')
     tags = Tag.objects.filter(name__icontains=search)
-    tags = list(tags.values_list('name', flat=True))if search else []
+    tags = list(tags.values_list('name', flat=True)) if search else []
     return JsonResponse({'tags': tags, 'count': len(tags)})
 
 

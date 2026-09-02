@@ -355,7 +355,37 @@
         {% endfor %}
 
     </div>
+    {% if posts.has_other_pages %}
+    <div class="flex items-center justify-center gap-2 mt-10 ">
+            {% if posts.has_previous %}
+            <a href="?page={{ posts.previous_page_number }}{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}{% if request.GET.category %}&category={{ request.GET.category }}{% endif %}{% if request.GET.tag %}&tag={{ request.GET.tag }}{% endif %}"
+           class="px-3 py-2 rounded-xl bg-slate-800/70 border border-white/10
+                  text-slate-300 text-sm hover:border-indigo-500/50
+                  hover:text-white transition-all">
+                Назад
+            </a>
+            {% endif %}
+            {% for num in posts.paginator.page_range %}
+            {% if num == posts.number %}
+            <span class="px-3.5 py-2 rounded-xl bg-indigo-500 text-white text-sm font-medium">
+                {{num}}
+            </span>
+            {% else %}
+               <a href="?page={{ num }}{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}{% if request.GET.category %}&category={{ request.GET.category }}{% endif %}{% if request.GET.tag %}&tag={{ request.GET.tag }}{% endif %}" class="px-3.5 py-2 rounded-xl bg-slate-800/70 border border-white/10 text-slate-300 text-sm hover:border-indigo-500/50 hover:text-white transition-all"> {{ num }} </a>
+            {% endif %}
 
+            {% endfor %}
+
+            {% if posts.has_next %}
+            <a href="?page={{ posts.next_page_number }}{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}{% if request.GET.category %}&category={{ request.GET.category }}{% endif %}{% if request.GET.tag %}&tag={{ request.GET.tag }}{% endif %}"
+               class="px-3 py-2 rounded-xl bg-slate-800/70 border border-white/10
+                      text-slate-300 text-sm hover:border-indigo-500/50
+                      hover:text-white transition-all">
+                Вперёд
+            </a>
+            {% endif %}
+    </div>
+    {% endif %}
 </main>
 
 {% endblock %}
