@@ -120,7 +120,7 @@
             </h2>
 
             <span class="text-sm text-slate-500">
-            {{ comments.count }} комментариев
+            {{ comments_count }} комментариев
         </span>
         </div>
 
@@ -291,7 +291,186 @@
                                 <span class="text-sm">{{ comment.dislikes.count }}</span>
                             </a>
 
+                            <!-- Ответить -->
+                            {% if request.user.is_authenticated %}
+                            <button type="button"
+                                    class="reply-open-btn flex items-center gap-1.5 px-3 py-1.5 rounded-lg
+                                           border border-white/10 text-slate-400
+                                           hover:bg-white/5 hover:text-slate-200
+                                           transition-colors"
+                                    data-target="reply-form-{{ comment.pk }}">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor"
+                                     viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round"
+                                          stroke-width="2"
+                                          d="M9 17l-5-5 5-5m-5 5h12a4 4 0 004-4V6"/>
+                                </svg>
+                                <span class="text-sm">Ответить</span>
+                            </button>
+                            {% endif %}
+
                         </div>
+
+                        <!-- Форма ответа: появляется по клику на "Ответить" (в комментарии или в любом из ответов) -->
+                        {% if request.user.is_authenticated %}
+                        <form id="reply-form-{{ comment.pk }}"
+                              action="{% url 'articles:comment_create' post.pk %}"
+                              method="post"
+                              class="reply-form hidden mt-3">
+
+                            {% csrf_token %}
+                            <input type="hidden" name="parent" value="{{ comment.pk }}">
+
+                            <textarea
+                                    name="body"
+                                    required
+                                    rows="2"
+                                    placeholder="Ваш ответ, {{ comment.user.username }}..."
+                                    class="w-full bg-slate-900/50 border
+                                           border-white/[0.08]
+                                           rounded-xl px-4 py-2.5
+                                           text-slate-200 text-sm
+                                           placeholder:text-slate-500
+                                           focus:outline-none
+                                           focus:border-indigo-500/40
+                                           resize-none"></textarea>
+
+                            <div class="flex justify-end gap-2 mt-2">
+                                <button type="button"
+                                        class="reply-cancel-btn px-3 py-1.5 rounded-lg
+                                               text-sm text-slate-400
+                                               hover:bg-white/5 transition-colors"
+                                        data-target="reply-form-{{ comment.pk }}">
+                                    Отмена
+                                </button>
+                                <button type="submit"
+                                        class="px-3 py-1.5 rounded-lg
+                                               bg-indigo-500/10
+                                               border border-indigo-500/30
+                                               text-indigo-400 text-sm
+                                               hover:bg-indigo-500/20
+                                               transition-colors">
+                                    Ответить
+                                </button>
+                            </div>
+                        </form>
+                        {% endif %}
+
+                        <!-- Список ответов: показывается/скрывается кнопкой "N ответов" внизу -->
+                        {% if comment.reply.all %}
+                        <div id="reply-list-{{ comment.pk }}"
+                             class="reply-list hidden space-y-3 mt-4 pl-4 border-l-2 border-white/[0.08]">
+                            {% for reply in comment.reply.all %}
+                            <div class="flex gap-3">
+
+                                {% if reply.user.profile.avatar %}
+                                <img src="{{ reply.user.profile.avatar.url }}"
+                                     alt="{{ reply.user.username }}"
+                                     class="w-8 h-8 rounded-full object-cover flex-shrink-0">
+                                {% else %}
+                                <div class="w-8 h-8 rounded-full
+                                        bg-indigo-500/20
+                                        text-indigo-400 text-xs
+                                        flex items-center justify-center
+                                        font-medium flex-shrink-0">
+                                    {{ reply.user.username|slice:":2"|upper }}
+                                </div>
+                                {% endif %}
+
+                                <div class="flex-1">
+
+                                    <div class="flex justify-between gap-2 mb-1">
+                                        <div>
+                                            <span class="font-medium text-slate-200 text-sm">
+                                                {{ reply.user.username }}
+                                            </span>
+                                            <span class="text-xs text-slate-500">
+                                                {{ reply.date_created|date:"d M Y H:i" }}
+                                            </span>
+                                        </div>
+                                        {% if request.user == reply.user %}
+                                        <button
+                                                data-id="{{ reply.pk }}"
+                                                class="delete-btn text-xs text-red-400 border border-red-500/30 hover:bg-red-500/10
+                                                       rounded-lg px-2.5 py-1 transition-colors">
+                                            Удалить
+                                        </button>
+                                        {% endif %}
+                                    </div>
+
+                                    <p class="text-slate-300 text-sm leading-relaxed">
+                                        {{ reply.body|linebreaksbr }}
+                                    </p>
+
+                                    <div class="flex items-center gap-3 mt-2">
+                                        <a href="{% url 'articles:comment_likes' reply.pk %}"
+                                           class="flex items-center gap-1 px-2.5 py-1 rounded-lg
+                                                  border border-green-500/30
+                                                  {% if request.user in reply.likes.all %}bg-green-500/10{% endif %}
+                                                  text-green-400 hover:bg-green-500/20
+                                                  transition-colors">
+                                            <svg class="w-3.5 h-3.5" fill="none"
+                                                 stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round"
+                                                      stroke-width="2"
+                                                      d="M14 9V5a3 3 0 00-6 0v4H5a2 2 0 00-2 2v2a2 2 0 002 2h3l1 5h8a2 2 0 001.96-1.61l1-5A2 2 0 0018 8h-4z"/>
+                                            </svg>
+                                            <span class="text-xs">{{ reply.likes.count }}</span>
+                                        </a>
+                                        <a href="{% url 'articles:comment_dislikes' reply.pk %}"
+                                           class="flex items-center gap-1 px-2.5 py-1 rounded-lg
+                                                  border border-red-500/30
+                                                  {% if request.user in reply.dislikes.all %}bg-red-500/10{% endif %}
+                                                  text-red-400 hover:bg-red-500/20
+                                                  transition-colors">
+                                            <svg class="w-3.5 h-3.5 rotate-180" fill="none"
+                                                 stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round"
+                                                      stroke-width="2"
+                                                      d="M14 9V5a3 3 0 00-6 0v4H5a2 2 0 00-2 2v2a2 2 0 002 2h3l1 5h8a2 2 0 001.96-1.61l1-5A2 2 0 0018 8h-4z"/>
+                                            </svg>
+                                            <span class="text-xs">{{ reply.dislikes.count }}</span>
+                                        </a>
+
+                                        <!-- Ответить на ответ: открывает ту же форму, что и "Ответить" у корневого
+                                             комментария (бэкенд всегда крепит ответ к корневому комментарию),
+                                             но подставляет упоминание автора ответа -->
+                                        {% if request.user.is_authenticated %}
+                                        <button type="button"
+                                                class="reply-open-btn flex items-center gap-1 px-2.5 py-1 rounded-lg
+                                                       text-xs text-slate-400
+                                                       hover:bg-white/5 hover:text-slate-200
+                                                       transition-colors"
+                                                data-target="reply-form-{{ comment.pk }}"
+                                                data-mention="{{ reply.user.username }}">
+                                            Ответить
+                                        </button>
+                                        {% endif %}
+                                    </div>
+
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                        {% endif %}
+
+                        <!-- "N ответов" — внизу карточки комментария, отдельной строкой -->
+                        {% if comment.reply.count %}
+                        <div class="mt-4 pt-3 border-t border-white/[0.06]">
+                            <button type="button"
+                                    class="reply-toggle-btn flex items-center gap-1.5
+                                           text-sm text-indigo-400 hover:text-indigo-300
+                                           transition-colors"
+                                    data-target="reply-list-{{ comment.pk }}">
+                                <span>{{ comment.reply.count }} ответов</span>
+                                <svg class="chevron w-4 h-4 transition-transform duration-200"
+                                     fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round"
+                                          stroke-width="2" d="M19 9l-7 7-7-7"/>
+                                </svg>
+                            </button>
+                        </div>
+                        {% endif %}
 
                     </div>
 
@@ -556,6 +735,54 @@
             deleteId = button.dataset.id
             console.log(deleteId)
         }
+    })
+
+    // Кнопка "Ответить" (у комментария и у каждого ответа) — показывает форму ответа.
+    // Открытие новой формы закрывает все остальные открытые формы ответа.
+    document.querySelectorAll('.reply-open-btn').forEach((button) => {
+        button.addEventListener('click', () => {
+            const form = document.getElementById(button.dataset.target)
+            if (!form) return
+
+            const wasHidden = form.classList.contains('hidden')
+
+            document.querySelectorAll('.reply-form').forEach((f) => {
+                if (f !== form) f.classList.add('hidden')
+            })
+
+            if (wasHidden) {
+                form.classList.remove('hidden')
+                const textarea = form.querySelector('textarea')
+                if (textarea) {
+                    const mention = button.dataset.mention
+                    if (mention && !textarea.value) {
+                        textarea.value = `@${mention}, `
+                    }
+                    textarea.focus()
+                    textarea.setSelectionRange(textarea.value.length, textarea.value.length)
+                }
+            } else {
+                form.classList.add('hidden')
+            }
+        })
+    })
+
+    document.querySelectorAll('.reply-cancel-btn').forEach((button) => {
+        button.addEventListener('click', () => {
+            const form = document.getElementById(button.dataset.target)
+            if (form) form.classList.add('hidden')
+        })
+    })
+
+    // Кнопка "N ответов" — показать/скрыть список ответов, стрелка крутится
+    document.querySelectorAll('.reply-toggle-btn').forEach((button) => {
+        button.addEventListener('click', () => {
+            const list = document.getElementById(button.dataset.target)
+            if (!list) return
+            list.classList.toggle('hidden')
+            const chevron = button.querySelector('.chevron')
+            if (chevron) chevron.classList.toggle('rotate-180')
+        })
     })
 
     commentDelete.addEventListener('submit', (event) => {

@@ -39,7 +39,10 @@ class Comment(models.Model):
     date_updated = models.DateTimeField(auto_now=True)
     likes = models.ManyToManyField(User, related_name='comment_likes')
     dislikes = models.ManyToManyField(User, related_name='comment_islikes')
-
+    parent = models.ForeignKey('self', on_delete=models.CASCADE,null=True,
+                               blank=True,related_name='reply')
+    first_comment = models.ForeignKey('self', on_delete=models.CASCADE,
+                                      null=True,related_name='main_comment')
 
     def __str__(self):
         return f"{self.post}-{self.body[:5]}"

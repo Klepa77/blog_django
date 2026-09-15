@@ -97,6 +97,62 @@
 
                 </select>
 
+
+                <!-- Стрелка -->
+                <svg
+                        class="pointer-events-none
+                   absolute right-3 top-1/2
+                   -translate-y-1/2
+                   w-4 h-4 text-slate-500"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24">
+
+                    <path stroke-linecap="round"
+                          stroke-linejoin="round"
+                          stroke-width="2"
+                          d="M19 9l-7 7-7-7"/>
+
+                </svg>
+
+            </div>
+
+             <div class="relative w-full sm:w-64">
+
+             <select
+                        id="sort"
+                        name="sort"
+                        onchange="this.form.submit()"
+                        class="w-full appearance-none
+                   bg-slate-800/70
+                   border border-white/[0.08]
+                   text-slate-200
+                   text-sm
+                   rounded-xl
+                   px-4 py-2.5
+                   pr-10
+                   outline-none
+                   cursor-pointer
+                   hover:border-white/[0.15]
+                   focus:border-indigo-500/50
+                   focus:ring-2
+                   focus:ring-indigo-500/20
+                   transition-all">
+                    <option>Без сортировки</option>
+                    {% for key,value in sort_options %}
+
+
+                    <option
+                            value="{{ key }}" {% if request.GET.sort == key %}selected{% endif %}>
+
+                    {{ value }}
+
+                    </option>
+
+                    {% endfor %}
+
+                </select>
+
                 <!-- Стрелка -->
                 <svg
                         class="pointer-events-none

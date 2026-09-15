@@ -2,7 +2,7 @@ from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib.auth.decorators import login_required
 from articles import forms
 from articles.models import Post, Comment, Category, Tag
-from django.db.models import Q
+from django.db.models import Q,F,Count
 from django.http import HttpResponse, JsonResponse
 from django.core.paginator import Paginator
 
@@ -14,13 +14,28 @@ def home(request):
     search = request.GET.get('search')
     category = request.GET.get('category')
     tag = request.GET.get('tag')
+    sort = request.GET.get('sort')
+
     posts = Post.objects.all().order_by('-date_created')
     posts = posts.filter(title__icontains=search) if search else posts
     posts = posts.filter(category=category) if category else posts
     posts = posts.filter(tags__name=tag) if tag else posts
+    posts = posts.order_by('-date_created')if sort == 'new_first' else posts
+    posts = posts.order_by('date_created')if sort == 'old_first' else posts
+    posts = Post.objects.annotate(
+        comments_count=Count('comment'),
+        popular = F('likes') - F('dislikes')+F('comments_count')*3
+    ).order_by('popular')if sort == 'popular_first' else posts
+
     categories = Category.objects.all()
     paginator = Paginator(posts, 3)
     page_object = paginator.get_page(page)
+    sort_options = {
+        'new_first':'Сначала новые',
+        'old_first':'Сначала старые',
+        'popular_first':'Сначала популярные',
+
+    }
 
     return render(request,
                   'home.html',
@@ -28,13 +43,14 @@ def home(request):
                    'categories': categories,
                    'category': category,
                    'search': search,
+                   'sort_options': sort_options.items(),
 
                    })
 
 
 def post(request, pk):
     post_data = get_object_or_404(Post, pk=pk)
-    comments = Comment.objects.filter(post=post_data)
+    comments = Comment.objects.filter(post=post_data,parent = None)
     try:
         next_post = post_data.get_next_by_date_created()
     except Post.DoesNotExist:
@@ -94,12 +110,18 @@ def post_delete(request, pk):
 def comment_create(request, post_pk):
     post_data = Post.objects.get(pk=post_pk)
     body = request.POST.get('body')
+    parent_id = request.POST.get('parent')
+    print(parent_id)
+
 
     if request.method == 'POST':
         instance = Comment()
         instance.user = request.user
         instance.post = post_data
         instance.body = body
+        if parent_id:
+            main_comment = Comment.objects.get(pk=parent_id)
+            instance.parent = main_comment
         instance.save()
     return redirect('articles:post', pk=post_pk)
 
