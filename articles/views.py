@@ -1,3 +1,4 @@
+from django.contrib.auth.models import User
 from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib.auth.decorators import login_required
 from articles import forms
@@ -15,11 +16,14 @@ def home(request):
     category = request.GET.get('category')
     tag = request.GET.get('tag')
     sort = request.GET.get('sort')
+    author = request.GET.get('author')
+    selected_author = User.objects.filter(pk=author).first() if author else None
 
     posts = Post.objects.all().order_by('-date_created')
     posts = posts.filter(title__icontains=search) if search else posts
     posts = posts.filter(category=category) if category else posts
     posts = posts.filter(tags__name=tag) if tag else posts
+    posts = posts.filter(author=author) if author else posts
     posts = posts.order_by('-date_created')if sort == 'new_first' else posts
     posts = posts.order_by('date_created')if sort == 'old_first' else posts
     posts = Post.objects.annotate(
@@ -44,6 +48,7 @@ def home(request):
                    'category': category,
                    'search': search,
                    'sort_options': sort_options.items(),
+                   'selected_author': selected_author,
 
                    })
 
@@ -111,8 +116,6 @@ def comment_create(request, post_pk):
     post_data = Post.objects.get(pk=post_pk)
     body = request.POST.get('body')
     parent_id = request.POST.get('parent')
-    print(parent_id)
-
 
     if request.method == 'POST':
         instance = Comment()

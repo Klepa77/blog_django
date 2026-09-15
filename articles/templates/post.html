@@ -513,7 +513,7 @@
                 <p class="text-xs text-slate-500">Автор статьи</p>
             </div>
         </div>
-        <a href=""
+        <a href="{% url 'articles:home' %}?author={{ post.author.id }} "
            class="text-sm text-indigo-400 border border-indigo-500/30 hover:bg-indigo-500/10
                   rounded-lg px-4 py-2 transition-colors">
             Все статьи автора →

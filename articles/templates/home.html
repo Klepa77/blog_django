@@ -97,62 +97,6 @@
 
                 </select>
 
-
-                <!-- Стрелка -->
-                <svg
-                        class="pointer-events-none
-                   absolute right-3 top-1/2
-                   -translate-y-1/2
-                   w-4 h-4 text-slate-500"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24">
-
-                    <path stroke-linecap="round"
-                          stroke-linejoin="round"
-                          stroke-width="2"
-                          d="M19 9l-7 7-7-7"/>
-
-                </svg>
-
-            </div>
-
-             <div class="relative w-full sm:w-64">
-
-             <select
-                        id="sort"
-                        name="sort"
-                        onchange="this.form.submit()"
-                        class="w-full appearance-none
-                   bg-slate-800/70
-                   border border-white/[0.08]
-                   text-slate-200
-                   text-sm
-                   rounded-xl
-                   px-4 py-2.5
-                   pr-10
-                   outline-none
-                   cursor-pointer
-                   hover:border-white/[0.15]
-                   focus:border-indigo-500/50
-                   focus:ring-2
-                   focus:ring-indigo-500/20
-                   transition-all">
-                    <option>Без сортировки</option>
-                    {% for key,value in sort_options %}
-
-
-                    <option
-                            value="{{ key }}" {% if request.GET.sort == key %}selected{% endif %}>
-
-                    {{ value }}
-
-                    </option>
-
-                    {% endfor %}
-
-                </select>
-
                 <!-- Стрелка -->
                 <svg
                         class="pointer-events-none
@@ -195,8 +139,37 @@
                     </a>
                 </span>
                 {% endif %}
+
+            <!-- Скрытое поле, чтобы фильтр по автору не терялся при сабмите формы поиска/категории -->
+            {% if request.GET.author %}
+            <input type="hidden" name="author" value="{{ request.GET.author }}">
+            {% endif %}
+
+            <!-- Чип "Автор" -->
+            {% if request.GET.author %}
+                <span class="w-full sm:w-auto flex-shrink-0
+                             inline-flex items-center justify-center gap-2
+                             px-4 py-2.5
+                             bg-indigo-500/10
+                             border border-indigo-500/30
+                             text-indigo-300
+                             text-sm font-medium
+                             rounded-xl
+                             whitespace-nowrap">
+                    Автор: {{ selected_author.username|default:request.GET.author }}
+                    <a href="?{% if request.GET.search %}search={{ request.GET.search }}&{% endif %}{% if request.GET.category %}category={{ request.GET.category }}&{% endif %}{% if request.GET.tag %}tag={{ request.GET.tag }}{% endif %}"
+                       class="text-indigo-400 hover:text-white transition-colors"
+                       aria-label="Убрать фильтр по автору">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round"
+                                  stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                        </svg>
+                    </a>
+                </span>
+                {% endif %}
+
             <!-- Очистить -->
-            {% if search or category or 'tag' in request.GET %}
+            {% if search or category or 'tag' in request.GET or 'author' in request.GET %}
 
             <a href="{% url 'articles:home' %}"
                class="w-full sm:w-auto
