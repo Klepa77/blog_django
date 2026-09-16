@@ -17,6 +17,7 @@ urlpatterns=[
     path('comment_likes/<int:pk>',views.comment_likes,name='comment_likes'),
     path('comment_dislikes/<int:pk>',views.comment_dislikes,name='comment_dislikes'),
     path('fetch_tags/',views.fetch_tags,name='fetch_tags'),
+    path('favorite/<int:pk>',views.favorite,name='favorite'),
 
 
 

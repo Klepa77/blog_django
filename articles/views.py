@@ -2,7 +2,7 @@ from django.contrib.auth.models import User
 from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib.auth.decorators import login_required
 from articles import forms
-from articles.models import Post, Comment, Category, Tag
+from articles.models import *
 from django.db.models import Q,F,Count
 from django.http import HttpResponse, JsonResponse
 from django.core.paginator import Paginator
@@ -17,6 +17,7 @@ def home(request):
     tag = request.GET.get('tag')
     sort = request.GET.get('sort')
     author = request.GET.get('author')
+    favorite_only = request.GET.get('favorite')
     selected_author = User.objects.filter(pk=author).first() if author else None
 
     posts = Post.objects.all().order_by('-date_created')
@@ -24,6 +25,9 @@ def home(request):
     posts = posts.filter(category=category) if category else posts
     posts = posts.filter(tags__name=tag) if tag else posts
     posts = posts.filter(author=author) if author else posts
+    if favorite_only and request.user.is_authenticated:
+        favorite_post_ids = Favorite.objects.filter(user=request.user).values_list('post_id', flat=True)
+        posts = posts.filter(pk__in=favorite_post_ids)
     posts = posts.order_by('-date_created')if sort == 'new_first' else posts
     posts = posts.order_by('date_created')if sort == 'old_first' else posts
     posts = Post.objects.annotate(
@@ -56,6 +60,9 @@ def home(request):
 def post(request, pk):
     post_data = get_object_or_404(Post, pk=pk)
     comments = Comment.objects.filter(post=post_data,parent = None)
+    is_favorite = post_data.favorite_set.filter(user=request.user).exists() \
+        if request.user.is_authenticated else False
+
     try:
         next_post = post_data.get_next_by_date_created()
     except Post.DoesNotExist:
@@ -66,7 +73,7 @@ def post(request, pk):
         prev_post = None
     return render(request, 'post.html',
                   {'post': post_data, 'next_post': next_post,
-                   'prev_post': prev_post, 'comments': comments})
+                   'prev_post': prev_post, 'comments': comments,'is_favorite': is_favorite})
 
 
 @login_required(login_url='/users/sign_in')
@@ -202,3 +209,15 @@ def resolve_tags(raw: str) -> list[Tag]:
         tag_objects.append(tag)
 
     return tag_objects
+
+
+@login_required(login_url='/users/sign_in')
+def favorite(request, pk):
+    article = Post.objects.get(pk=pk)
+    favorite_post,created = Favorite.objects.get_or_create(user=request.user,
+                                                      post=article)
+    if not created:
+        favorite_post.delete()
+
+
+    return redirect('articles:post', pk=pk)

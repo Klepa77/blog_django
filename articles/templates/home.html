@@ -169,7 +169,7 @@
                 {% endif %}
 
             <!-- Очистить -->
-            {% if search or category or 'tag' in request.GET or 'author' in request.GET %}
+            {% if search or category or 'tag' in request.GET or 'author' in request.GET or 'favorite' in request.GET %}
 
             <a href="{% url 'articles:home' %}"
                class="w-full sm:w-auto
