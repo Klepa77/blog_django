@@ -8,19 +8,22 @@ class Post(models.Model):
     date_created = models.DateTimeField(auto_now_add=True)
     date_updated = models.DateTimeField(auto_now=True)
     author = models.ForeignKey(User, on_delete=models.CASCADE)
-    image = models.ImageField(default='default.jpg',upload_to="posts",
+    image = models.ImageField(default='default.jpg', upload_to="posts",
                               blank=True)
     likes = models.ManyToManyField(User, related_name='likes', blank=True)
-    dislikes = models.ManyToManyField(User, related_name='dislikes',blank=True)
-    category = models.ForeignKey('articles.Category',null=True,on_delete=models.CASCADE)
-    tags = models.ManyToManyField('articles.Tag',related_name='tags',blank=True)
-
+    dislikes = models.ManyToManyField(User, related_name='dislikes',
+                                      blank=True)
+    category = models.ForeignKey('articles.Category', null=True,
+                                 on_delete=models.CASCADE)
+    tags = models.ManyToManyField('articles.Tag', related_name='tags',
+                                  blank=True)
 
     def __str__(self):
         return self.title
 
     def snippet(self):
         return self.text[:20] + "... read more"
+
 
 class Person(models.Model):
     name = models.CharField(max_length=255)
@@ -32,17 +35,17 @@ class Person(models.Model):
 
 
 class Comment(models.Model):
-    post = models.ForeignKey(Post, on_delete=models.CASCADE,null=True)
+    post = models.ForeignKey(Post, on_delete=models.CASCADE, null=True)
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     body = models.TextField()
     date_created = models.DateTimeField(auto_now_add=True)
     date_updated = models.DateTimeField(auto_now=True)
     likes = models.ManyToManyField(User, related_name='comment_likes')
     dislikes = models.ManyToManyField(User, related_name='comment_islikes')
-    parent = models.ForeignKey('self', on_delete=models.CASCADE,null=True,
-                               blank=True,related_name='reply')
+    parent = models.ForeignKey('self', on_delete=models.CASCADE, null=True,
+                               blank=True, related_name='reply')
     first_comment = models.ForeignKey('self', on_delete=models.CASCADE,
-                                      null=True,related_name='main_comment')
+                                      null=True, related_name='main_comment')
 
     def __str__(self):
         return f"{self.post}-{self.body[:5]}"
@@ -50,7 +53,6 @@ class Comment(models.Model):
 
 class Category(models.Model):
     name = models.CharField(max_length=255)
-
 
     def __str__(self):
         return self.name
@@ -73,3 +75,19 @@ class Favorite(models.Model):
 
     class Meta:
         unique_together = ('user', 'post')
+
+
+class HiddenAuthor(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE,
+                             related_name='hidden_authors')
+    author = models.ForeignKey(User, on_delete=models.CASCADE,
+                               related_name='hidden_by')
+
+    class Meta:
+        constraints = [models.UniqueConstraint(fields=['user', 'author'],
+                                               name='unique_author'),
+                       models.CheckConstraint(check=~models.Q(user=models.F(
+                           'author')), name='cannot_hide_self')]
+
+    def __str__(self):
+        return self.name

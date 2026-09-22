@@ -39,12 +39,62 @@
             <a href="{% url 'users:sign_in' %}"
                class="text-sm font-medium bg-indigo-500 hover:bg-indigo-400 text-white px-4 py-2 rounded-lg transition-colors">Войти</a>
             {% else %}
-            <a href="{% url 'users:sign_out' %}"
-               class="text-sm font-medium bg-red-500 hover:bg-red-400
-          text-white px-4 py-2 rounded-lg transition-colors">
-                Выйти
-            </a>
+<div class="relative" id="user-menu">
+    <button type="button" id="user-menu-btn"
+            class="flex items-center gap-2 pl-1.5 pr-2.5 py-1.5 rounded-lg
+                   border border-white/10 hover:bg-white/5 transition-colors"
+            aria-haspopup="true" aria-expanded="false">
+        {% if user.profile.avatar %}
+        <img src="{{ user.profile.avatar.url }}" alt="{{ user.username }}"
+             class="w-7 h-7 rounded-full object-cover">
+        {% else %}
+        <div class="w-7 h-7 rounded-full bg-indigo-500/20 text-indigo-400
+                    flex items-center justify-center text-xs font-medium">
+            {{ user.username|slice:":2"|upper }}
+        </div>
+        {% endif %}
+        <span class="text-sm text-slate-200 max-w-[120px] truncate">{{ user.username }}</span>
+        <svg class="user-menu-chevron w-4 h-4 text-slate-400 transition-transform duration-200"
+             fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+        </svg>
+    </button>
+
+    <div id="user-menu-dropdown"
+         class="hidden absolute right-0 mt-2 w-56 origin-top-right
+                bg-slate-800 border border-white/[0.08] rounded-xl shadow-xl py-1.5">
+
+        <div class="px-3.5 py-2 border-b border-white/[0.06] mb-1">
+            <p class="text-sm font-medium text-slate-200 truncate">{{ user.username }}</p>
+            {% if user.email %}
+            <p class="text-xs text-slate-500 truncate">{{ user.email }}</p>
             {% endif %}
+        </div>
+
+        <a href="{% url 'articles:show_hidden_authors' %}"
+           class="flex items-center gap-2.5 px-3.5 py-2 text-sm text-slate-300
+                  hover:bg-white/5 hover:text-slate-100 transition-colors">
+            <svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                      d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21"/>
+            </svg>
+            Скрытые авторы
+        </a>
+
+        <div class="my-1 border-t border-white/[0.06]"></div>
+
+        <a href="{% url 'users:sign_out' %}"
+           class="flex items-center gap-2.5 px-3.5 py-2 text-sm text-red-400
+                  hover:bg-red-500/10 transition-colors">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                      d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/>
+            </svg>
+            Выйти
+        </a>
+    </div>
+</div>
+{% endif %}
         </div>
     </div>
 </nav>
@@ -54,6 +104,33 @@
 {% endblock %}
 {% block script %}
 {% endblock %}
+<script>
+    (() => {
+        const btn = document.getElementById('user-menu-btn')
+        const dropdown = document.getElementById('user-menu-dropdown')
+        if (!btn || !dropdown) return
 
+        const chevron = btn.querySelector('.user-menu-chevron')
+
+        const setOpen = (open) => {
+            dropdown.classList.toggle('hidden', !open)
+            chevron.classList.toggle('rotate-180', open)
+            btn.setAttribute('aria-expanded', open)
+        }
+
+        btn.addEventListener('click', (e) => {
+            e.stopPropagation()
+            setOpen(dropdown.classList.contains('hidden'))
+        })
+
+        document.addEventListener('click', (e) => {
+            if (!document.getElementById('user-menu').contains(e.target)) setOpen(false)
+        })
+
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') setOpen(false)
+        })
+    })()
+</script>
 </body>
 </html>

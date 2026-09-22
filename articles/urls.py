@@ -18,6 +18,8 @@ urlpatterns=[
     path('comment_dislikes/<int:pk>',views.comment_dislikes,name='comment_dislikes'),
     path('fetch_tags/',views.fetch_tags,name='fetch_tags'),
     path('favorite/<int:pk>',views.favorite,name='favorite'),
+    path('hide_this_author/<int:pk>',views.hide_this_author,name='hide_this_author'),
+    path('show_hidden_authors/',views.show_hidden_authors,name='show_hidden_authors'),
 
 
 

@@ -21,6 +21,8 @@ def home(request):
     selected_author = User.objects.filter(pk=author).first() if author else None
 
     posts = Post.objects.all().order_by('-date_created')
+    hidden_authors = HiddenAuthor.objects.filter(user=request.user).values_list('author', flat=True)
+    posts = posts.exclude(author__in=hidden_authors)
     posts = posts.filter(title__icontains=search) if search else posts
     posts = posts.filter(category=category) if category else posts
     posts = posts.filter(tags__name=tag) if tag else posts
@@ -62,6 +64,8 @@ def post(request, pk):
     comments = Comment.objects.filter(post=post_data,parent = None)
     is_favorite = post_data.favorite_set.filter(user=request.user).exists() \
         if request.user.is_authenticated else False
+    is_hidden_author = HiddenAuthor.objects.filter(user=request.user).exists() if request.user.is_authenticated else False
+    print(is_hidden_author)
 
     try:
         next_post = post_data.get_next_by_date_created()
@@ -221,3 +225,22 @@ def favorite(request, pk):
 
 
     return redirect('articles:post', pk=pk)
+
+@login_required(login_url='/users/sign_in')
+def hide_this_author(request, pk,):
+    author = get_object_or_404(User, id=pk)
+    if request.user == author:
+        return JsonResponse({'error':'you cannot hide yourself'})
+    obj,created = HiddenAuthor.objects.get_or_create(author=author,
+                                                     user=request.user)
+    if not created:
+        obj.delete()
+    return redirect('articles:home')
+
+@login_required(login_url='/users/sign_in')
+
+def show_hidden_authors(request):
+    hidden_authors = HiddenAuthor.objects.filter(user=request.user)
+    return render(request, 'hidden_authors.html',
+                  {'hidden_authors': hidden_authors},)
+
