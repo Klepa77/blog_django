@@ -1,5 +1,8 @@
+import re
+
 from django.contrib.auth.models import User
 from django.db import models
+from django.utils.html import strip_tags
 
 
 class Post(models.Model):
@@ -19,6 +22,12 @@ class Post(models.Model):
                                   blank=True)
     views =models.PositiveIntegerField(default=0)
 
+    @property
+    def reading_time(self):
+        words_per_minute = 200
+        text = strip_tags(self.text)
+        words_count = len(re.findall(r'\w+', text))
+        return max(1,round(words_count/words_per_minute))
 
     def __str__(self):
         return self.title

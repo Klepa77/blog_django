@@ -1,5 +1,6 @@
 {% extends "layout.html" %}
 {% load static %}
+{% load humanize %}
 
 {% block content %}
 <div class="max-w-3xl mx-auto px-4 py-10">
@@ -30,11 +31,19 @@
                 <p class="text-sm font-medium text-slate-200">
                     {{ post.author.username }}</p>
                 <div class="flex items-center gap-2 text-xs text-slate-500">
-                    <span>{{ post.date_created|date:"d M Y" }}</span>
-                    {% if post.date_updated != post.date_created %}
-                    <span>· Обновлено {{ post.date_updated|date:"d M Y" }}</span>
-                    {% endif %}
-                </div>
+    <span title="{{ post.date_created|date:'d.m.Y H:i' }}">{{ post.date_created|naturaltime }}</span>
+    {% if post.date_updated != post.date_created %}
+    <span>· Обновлено {{ post.date_updated|naturaltime }}</span>
+    {% endif %}
+    <span class="flex items-center gap-1">
+        ·
+        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+        </svg>
+        {{ post.reading_time }} мин
+    </span>
+</div>
             </div>
 
         </div>
@@ -252,7 +261,7 @@
                         </span>
 
                                 <span class="text-xs text-slate-500">
-                            {{ comment.date_created|date:"d M Y H:i" }}
+                            {{ comment.date_created|naturaltime }}
                         </span>
                             </div>
                             <div>
@@ -421,7 +430,7 @@
                                                 {{ reply.user.username }}
                                             </span>
                                             <span class="text-xs text-slate-500">
-                                                {{ reply.date_created|date:"d M Y H:i" }}
+                                                {{reply.date_created|naturaltime }}
                                             </span>
                                         </div>
                                         {% if request.user == reply.user %}

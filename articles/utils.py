@@ -7,3 +7,4 @@ def increment_views(request,post):
     if not request.session.get(viewed_key, False):
         Post.objects.filter(pk=post.pk).update(views=F('views') + 1)
         request.session[viewed_key] = True
+
