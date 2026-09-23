@@ -115,6 +115,30 @@
                 </svg>
 
             </div>
+            <!-- Сортировка -->
+<div class="relative w-full sm:w-56">
+    <select id="sort" name="sort"
+            onchange="this.form.submit()"
+            class="w-full appearance-none
+                   bg-slate-800/70
+                   border border-white/[0.08]
+                   text-slate-200 text-sm
+                   rounded-xl px-4 py-2.5 pr-10
+                   outline-none cursor-pointer
+                   hover:border-white/[0.15]
+                   focus:border-indigo-500/50
+                   focus:ring-2 focus:ring-indigo-500/20
+                   transition-all">
+        <option value="new_first"     {% if sort == "new_first" %}selected{% endif %}>Сначала новые</option>
+        <option value="old_first"     {% if sort == "old_first" %}selected{% endif %}>Сначала старые</option>
+        <option value="popular_first" {% if sort == "popular_first" %}selected{% endif %}>Популярные</option>
+    </select>
+
+    <svg class="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500"
+         fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+    </svg>
+</div>
             {% if request.GET.tag %}
             <input type="hidden" name="tag" value="{{ request.GET.tag }}" >
             {% endif %}
@@ -326,24 +350,45 @@
                class="flex items-center justify-between
                     border-t border-white/[0.06] pt-4">
 
-            <span class="text-xs text-slate-600
-                         flex items-center gap-1.5">
+                <div class="flex items-center gap-3 text-xs text-slate-600">
 
-                <svg class="w-3.5 h-3.5"
-                     fill="none"
-                     stroke="currentColor"
-                     viewBox="0 0 24 24">
+                    <span class="flex items-center gap-1.5">
+                        <svg class="w-3.5 h-3.5"
+                             fill="none"
+                             stroke="currentColor"
+                             viewBox="0 0 24 24">
 
-                    <path stroke-linecap="round"
-                          stroke-linejoin="round"
-                          stroke-width="2"
-                          d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2v12a2 2 0 002 2z"/>
+                            <path stroke-linecap="round"
+                                  stroke-linejoin="round"
+                                  stroke-width="2"
+                                  d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2v12a2 2 0 002 2z"/>
 
-                </svg>
+                        </svg>
 
-                {{ article.date }}
+                        {{ article.date }}
+                    </span>
 
-            </span>
+                    <span class="flex items-center gap-1.5">
+                        <svg class="w-3.5 h-3.5"
+                             fill="none"
+                             stroke="currentColor"
+                             viewBox="0 0 24 24">
+
+                            <path stroke-linecap="round"
+                                  stroke-linejoin="round"
+                                  stroke-width="2"
+                                  d="M2.036 12.322a1.012 1.012 0 010-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178z"/>
+                            <path stroke-linecap="round"
+                                  stroke-linejoin="round"
+                                  stroke-width="2"
+                                  d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+
+                        </svg>
+
+                        {{ article.views }}
+                    </span>
+
+                </div>
 
 
                 <span data-id="{{ article.id }}"

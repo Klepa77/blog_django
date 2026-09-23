@@ -3,9 +3,10 @@ from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib.auth.decorators import login_required
 from articles import forms
 from articles.models import *
-from django.db.models import Q,F,Count
+from django.db.models import Q, F, Count
 from django.http import HttpResponse, JsonResponse
 from django.core.paginator import Paginator
+from .utils import increment_views
 
 
 # Create your views here.
@@ -18,32 +19,36 @@ def home(request):
     sort = request.GET.get('sort')
     author = request.GET.get('author')
     favorite_only = request.GET.get('favorite')
-    selected_author = User.objects.filter(pk=author).first() if author else None
+    selected_author = User.objects.filter(
+        pk=author).first() if author else None
 
     posts = Post.objects.all().order_by('-date_created')
-    hidden_authors = HiddenAuthor.objects.filter(user=request.user).values_list('author', flat=True)
+    hidden_authors = HiddenAuthor.objects.filter(
+        user=request.user).values_list('author', flat=True)
     posts = posts.exclude(author__in=hidden_authors)
     posts = posts.filter(title__icontains=search) if search else posts
     posts = posts.filter(category=category) if category else posts
     posts = posts.filter(tags__name=tag) if tag else posts
     posts = posts.filter(author=author) if author else posts
     if favorite_only and request.user.is_authenticated:
-        favorite_post_ids = Favorite.objects.filter(user=request.user).values_list('post_id', flat=True)
+        favorite_post_ids = Favorite.objects.filter(
+            user=request.user).values_list('post_id', flat=True)
         posts = posts.filter(pk__in=favorite_post_ids)
-    posts = posts.order_by('-date_created')if sort == 'new_first' else posts
-    posts = posts.order_by('date_created')if sort == 'old_first' else posts
+    posts = posts.order_by('-date_created') if sort == 'new_first' else posts
+    posts = posts.order_by('date_created') if sort == 'old_first' else posts
     posts = Post.objects.annotate(
         comments_count=Count('comment'),
-        popular = F('likes') - F('dislikes')+F('comments_count')*3
-    ).order_by('popular')if sort == 'popular_first' else posts
+        popular=F('likes') * 5 - F('dislikes') * 5 + F(
+            'comments_count') * 15 + F('views')
+    ).order_by('popular') if sort == 'popular_first' else posts
 
     categories = Category.objects.all()
     paginator = Paginator(posts, 3)
     page_object = paginator.get_page(page)
     sort_options = {
-        'new_first':'Сначала новые',
-        'old_first':'Сначала старые',
-        'popular_first':'Сначала популярные',
+        'new_first': 'Сначала новые',
+        'old_first': 'Сначала старые',
+        'popular_first': 'Сначала популярные',
 
     }
 
@@ -61,11 +66,12 @@ def home(request):
 
 def post(request, pk):
     post_data = get_object_or_404(Post, pk=pk)
-    comments = Comment.objects.filter(post=post_data,parent = None)
+    comments = Comment.objects.filter(post=post_data, parent=None)
     is_favorite = post_data.favorite_set.filter(user=request.user).exists() \
         if request.user.is_authenticated else False
-    is_hidden_author = HiddenAuthor.objects.filter(user=request.user).exists() if request.user.is_authenticated else False
-    print(is_hidden_author)
+    is_hidden_author = HiddenAuthor.objects.filter(user=request.user).exists() \
+        if request.user.is_authenticated else False
+    increment_views(request, post_data)
 
     try:
         next_post = post_data.get_next_by_date_created()
@@ -77,7 +83,8 @@ def post(request, pk):
         prev_post = None
     return render(request, 'post.html',
                   {'post': post_data, 'next_post': next_post,
-                   'prev_post': prev_post, 'comments': comments,'is_favorite': is_favorite})
+                   'prev_post': prev_post, 'comments': comments,
+                   'is_favorite': is_favorite})
 
 
 @login_required(login_url='/users/sign_in')
@@ -218,29 +225,28 @@ def resolve_tags(raw: str) -> list[Tag]:
 @login_required(login_url='/users/sign_in')
 def favorite(request, pk):
     article = Post.objects.get(pk=pk)
-    favorite_post,created = Favorite.objects.get_or_create(user=request.user,
-                                                      post=article)
+    favorite_post, created = Favorite.objects.get_or_create(user=request.user,
+                                                            post=article)
     if not created:
         favorite_post.delete()
 
-
     return redirect('articles:post', pk=pk)
 
+
 @login_required(login_url='/users/sign_in')
-def hide_this_author(request, pk,):
+def hide_this_author(request, pk, ):
     author = get_object_or_404(User, id=pk)
     if request.user == author:
-        return JsonResponse({'error':'you cannot hide yourself'})
-    obj,created = HiddenAuthor.objects.get_or_create(author=author,
-                                                     user=request.user)
+        return JsonResponse({'error': 'you cannot hide yourself'})
+    obj, created = HiddenAuthor.objects.get_or_create(author=author,
+                                                      user=request.user)
     if not created:
         obj.delete()
     return redirect('articles:home')
 
-@login_required(login_url='/users/sign_in')
 
+@login_required(login_url='/users/sign_in')
 def show_hidden_authors(request):
     hidden_authors = HiddenAuthor.objects.filter(user=request.user)
     return render(request, 'hidden_authors.html',
-                  {'hidden_authors': hidden_authors},)
-
+                  {'hidden_authors': hidden_authors}, )
