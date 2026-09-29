@@ -2,6 +2,7 @@ from django.shortcuts import render,redirect
 from django. contrib.auth import login,logout
 from .forms import SignUpForm,SignInForm
 # Create your views here.
+AUTH_BACKEND = 'django.contrib.auth.backends.ModelBackend'
 
 def sign_up(request):
     form = SignUpForm(request.POST or None)
@@ -14,7 +15,7 @@ def sign_in(request):
     form = SignInForm(data = request.POST or None)
     if form.is_valid():
         user = form.get_user()
-        login(request, user)
+        login(request, user,backend = AUTH_BACKEND)
         return redirect('articles:home')
     return render(request, 'sign_in.html', {'form': form})
 

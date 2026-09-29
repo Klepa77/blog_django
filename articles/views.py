@@ -10,7 +10,7 @@ from .utils import increment_views
 
 
 # Create your views here.
-
+@login_required(login_url='/users/sign_in')
 def home(request):
     page = request.GET.get('page')
     search = request.GET.get('search')
