@@ -38,6 +38,23 @@
                 Войти
             </button>
         </form>
+
+        {% if form.non_field_errors %}
+        <div class="mt-3 text-red-400 text-sm">
+            {{ form.non_field_errors|striptags }}
+            {% if form.inactive_user %}
+            <a href="{% url 'users:resend_activation' %}"
+               class="block mt-1 text-indigo-400 hover:text-indigo-300">Отправить письмо ещё раз</a>
+            {% endif %}
+        </div>
+        {% endif %}
+
+        <div class="flex items-center gap-3 my-5">
+            <div class="flex-1 h-px bg-white/[0.08]"></div>
+            <span class="text-xs text-slate-500">или</span>
+            <div class="flex-1 h-px bg-white/[0.08]"></div>
+        </div>
+
         {% include "_github_button.html" with label="Войти через GitHub" %}
 
         <div class="mt-5 pt-5 border-t border-white/[0.08] text-center">

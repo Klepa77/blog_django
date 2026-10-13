@@ -41,7 +41,14 @@
                 Зарегистрироваться
             </button>
         </form>
-        {% include "_github_button.html" with label="Войти через GitHub" %}
+
+        <div class="flex items-center gap-3 my-5">
+            <div class="flex-1 h-px bg-white/[0.08]"></div>
+            <span class="text-xs text-slate-500">или</span>
+            <div class="flex-1 h-px bg-white/[0.08]"></div>
+        </div>
+
+        {% include "_github_button.html" with label="Регистрация через GitHub" %}
 
         <div class="mt-5 pt-5 border-t border-white/[0.08] text-center">
             <p class="text-slate-400 text-sm">

@@ -1,0 +1,15 @@
+<div style="font-family:Arial,sans-serif;max-width:480px;margin:0 auto;padding:24px;color:#0f172a">
+    <h2 style="margin:0 0 16px">Подтверждение регистрации</h2>
+    <p>Здравствуйте, {{ user.username }}!</p>
+    <p>Чтобы активировать аккаунт, нажмите на кнопку:</p>
+    <p style="margin:24px 0">
+        <a href="{{ link }}"
+           style="background:#4f46e5;color:#fff;text-decoration:none;padding:12px 20px;border-radius:10px;display:inline-block">
+            Подтвердить email
+        </a>
+    </p>
+    <p style="font-size:13px;color:#64748b">
+        Или скопируйте ссылку: <br>{{ link }}<br><br>
+        Ссылка действует {{ hours }} ч. Если вы не регистрировались — проигнорируйте письмо.
+    </p>
+</div>
