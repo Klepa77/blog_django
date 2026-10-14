@@ -10,7 +10,7 @@ from .forms import SignUpForm, SignInForm, ResendActivationForm
 from .emails import send_activation_email
 
 # Create your views here.
-AUTH_BACKEND = 'django.contrib.auth.backends.ModelBackend'
+AUTH_BACKEND = 'users.backends.EmailOrUsernameBackend'
 
 
 def sign_up(request):
@@ -18,7 +18,7 @@ def sign_up(request):
     if form.is_valid():
         user = form.save()
         send_activation_email(request, user)
-        return redirect('users:sign_in')
+        return render(request,'check_email.html',{'email':user.email})
     return render(request, 'sign_up.html', {'form': form})
 
 

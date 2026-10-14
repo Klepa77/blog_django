@@ -10,7 +10,7 @@ def send_activation_email(request, user):
     uid = urlsafe_base64_encode(force_bytes(user.pk))
     token = default_token_generator.make_token(user)
     link = request.build_absolute_uri(
-    reverse('users_activate', kwargs={'uidb64': uid, 'token': token})
+    reverse('users:activate', kwargs={'uidb64': uid, 'token': token})
     )
     ctx = {'user': user,
            'link': link,
