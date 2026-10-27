@@ -8,4 +8,6 @@ urlpatterns = [
     path('403/', views.forbidden, name='forbidden'),
     path('activate/<uidb64>/<token>/', views.activate, name='activate'),
     path('activate/resent',views.resend_activation,name='resend_activation'),
+    path('magic/', views.magic_link_request, name='magic_link'),
+    path('magic/<str:token>',views.magic_login,name='magic_login'),
 ]

@@ -85,3 +85,28 @@ class ResendActivationForm(forms.Form):
                    focus:outline-none focus:border-indigo-500
                    """,
             })
+
+class MagicLinkForm(forms.Form):
+    email = forms.EmailField(
+        label='email',
+        widget=forms.EmailInput(attrs={
+            'autofocus': True,
+            'autocomplete': 'email',
+            'placeholder': 'you@example.com',
+        })
+    )
+
+    def clean_email(self):
+        return  self.cleaned_data.get('email').strip().lower()
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        for field in self.fields.values():
+            field.widget.attrs.update({
+                "class": """
+            w-full bg-slate-900/60 border border-white/10
+            rounded-xl px-4 py-3 text-slate-100
+            placeholder-slate-500
+            focus:outline-none focus:border-indigo-500
+            """,
+            })

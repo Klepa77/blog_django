@@ -18,7 +18,7 @@ def send_activation_email(request, user):
            }
     send_mail(
         subject='Подтверждение регистрации ',
-        message = render_to_string('emails/activation.txt'),
+        message = render_to_string('emails/activation.txt',ctx),
         html_message = render_to_string('emails/activation.html', ctx),
         from_email=settings.DEFAULT_FROM_EMAIL,
         recipient_list=[user.email],

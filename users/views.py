@@ -6,8 +6,9 @@ from django.contrib.auth import login, logout
 from django.utils.encoding import force_str
 from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
 
-from .forms import SignUpForm, SignInForm, ResendActivationForm
+from .forms import SignUpForm, SignInForm, ResendActivationForm, MagicLinkForm
 from .emails import send_activation_email
+from .import magic_link
 
 # Create your views here.
 AUTH_BACKEND = 'users.backends.EmailOrUsernameBackend'
@@ -69,3 +70,27 @@ def resend_activation(request):
         return render(request, 'check_email.html',
                       {'email': form.cleaned_data['email']})
     return render(request, 'resend_activation.html', {'form': form})
+
+
+def magic_link_request(request):
+    form = MagicLinkForm(request.POST or None)
+    if form.is_valid():
+        email = form.cleaned_data['email']
+        magic_link.send_magic_link(request, email)
+        return render(request, 'check_email.html',{'email': email,
+                                                   'magic':True})
+    return render(request, 'magic_link.html', {'form': form})
+
+
+def magic_login(request,token):
+    try:
+        user,created = magic_link.user_from_token(token)
+    except magic_link.MagicLinkError as e:
+        messages.error(request,str(e))
+        return redirect('users:magic_link')
+
+    login(request, user, backend=AUTH_BACKEND)
+
+    if created:
+        messages.success(request,f"Аккаунт {user.username} создан")
+    return redirect('articles:home')

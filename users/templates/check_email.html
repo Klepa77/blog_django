@@ -15,14 +15,20 @@
 
         <h1 class="text-2xl font-semibold text-slate-100 mb-2">Проверьте почту</h1>
         <p class="text-slate-400 text-sm leading-relaxed">
+            {% if magic %}
+            Мы отправили ссылку для входа на
+            <span class="text-slate-200">{{ email }}</span>.
+            Она действует 15 минут и сработает один раз.
+            {% else %}
             Мы отправили ссылку для подтверждения на
             <span class="text-slate-200">{{ email }}</span>.
             Перейдите по ней, чтобы активировать аккаунт.
+            {% endif %}
         </p>
 
         <div class="mt-5 pt-5 border-t border-white/[0.08] text-sm text-slate-400">
             Не пришло письмо? Проверьте «Спам» или
-            <a href="{% url 'users:resend_activation' %}"
+            <a href="{% if magic %}{% url 'users:magic_link' %}{% else %}{% url 'users:resend_activation' %}{% endif %}"
                class="text-indigo-400 hover:text-indigo-300">отправьте ещё раз</a>.
         </div>
     </div>
