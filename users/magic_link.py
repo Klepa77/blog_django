@@ -29,13 +29,16 @@ def send_magic_link(request, email):
         'link': link,
         'minutes': settings.MAGIC_LINK_MAX_AGE // 60,
     }
-    send_mail(
-        subject='Вход на сайт',
-        message=render_to_string('emails/magic_link.txt', context),
-        html_message=render_to_string('emails/magic_link.html', context),
-        from_email=settings.DEFAULT_FROM_EMAIL,
-        recipient_list=[email],
-    )
+    try:
+        send_mail(
+            subject='Вход на сайт',
+            message=render_to_string('emails/magic_link.txt', context),
+            html_message=render_to_string('emails/magic_link.html', context),
+            from_email=settings.DEFAULT_FROM_EMAIL,
+            recipient_list=[email],
+        )
+    except Exception as e:
+        print(e)
 
 
 class MagicLinkError(Exception):

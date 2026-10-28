@@ -184,6 +184,7 @@ else:
 DEFAULT_FROM_EMAIL = os.environ.get('DEFAULT_FROM_EMAIL',EMAIL_HOST_USER
                                     or'noreply@localhost')
 PASSWORD_RESET_TIMEOUT = 60*60*24
+MAGIC_LINK_MAX_AGE = 60 * 15
 
 
 
