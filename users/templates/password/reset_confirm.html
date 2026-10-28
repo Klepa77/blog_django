@@ -1,0 +1,45 @@
+{% extends "layout.html" %}
+
+{% block content %}
+<div class="min-h-[70vh] flex items-center justify-center px-4">
+    <div class="w-full max-w-sm bg-slate-800/60 border border-white/[0.08]
+                rounded-2xl p-6 backdrop-blur-sm">
+        {% if validlink %}
+        <div class="text-center mb-6">
+            <h1 class="text-2xl font-semibold text-slate-100 mb-2">Новый пароль</h1>
+            <p class="text-slate-400 text-sm">Придумайте пароль для входа</p>
+        </div>
+
+        <form method="post" class="space-y-4">
+            {% csrf_token %}
+            {% for field in form %}
+            <div>
+                <label class="block text-sm text-slate-300 mb-2">{{ field.label }}</label>
+                {{ field }}
+                {% if field.errors %}
+                <p class="text-red-400 text-sm mt-1">{{ field.errors|join:" " }}</p>
+                {% endif %}
+            </div>
+            {% endfor %}
+            <button type="submit"
+                    class="w-full bg-indigo-600 hover:bg-indigo-500 text-white
+                           font-medium rounded-xl py-2.5 transition-colors">
+                Сохранить пароль
+            </button>
+        </form>
+        {% else %}
+        <div class="text-center">
+            <h1 class="text-2xl font-semibold text-slate-100 mb-2">Ссылка недействительна</h1>
+            <p class="text-slate-400 text-sm leading-relaxed mb-5">
+                Возможно, она устарела или уже была использована.
+            </p>
+            <a href="{% url 'users:password_reset' %}"
+               class="inline-block px-5 py-2.5 rounded-xl border border-indigo-500/30
+                      text-indigo-400 hover:bg-indigo-500/10 transition-colors">
+                Запросить новую ссылку
+            </a>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

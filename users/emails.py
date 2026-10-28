@@ -27,3 +27,26 @@ def send_activation_email(request, user):
         )
     except Exception as e:
         print(e)
+
+
+def send_password_reset_email(request, user):
+    try:
+        uid = urlsafe_base64_encode(force_bytes(user.pk))
+        token = default_token_generator.make_token(user)
+        link = request.build_absolute_uri(
+            reverse('users:password_reset_confirm', kwargs={'uidb64': uid,
+                                                        'token': token})
+        )
+        ctx = {'user': user,
+               'link': link,
+               'hours': settings.PASSWORD_RESET_TIMEOUT // 3600
+               }
+        send_mail(
+            subject='Сброс пароля ',
+            message=render_to_string('emails/password_reset.txt', ctx),
+            html_message=render_to_string('emails/password_reset.html', ctx),
+            from_email=settings.DEFAULT_FROM_EMAIL,
+            recipient_list=[user.email],
+        )
+    except Exception as e:
+        print(e)

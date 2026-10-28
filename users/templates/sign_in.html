@@ -31,6 +31,11 @@
             </div>
             {% endfor %}
 
+            <div class="text-right -mt-2">
+                <a href="{% url 'users:password_reset' %}"
+                   class="text-sm text-indigo-400 hover:text-indigo-300">Забыли пароль?</a>
+            </div>
+
             <button type="submit"
                     class="w-full bg-indigo-600 hover:bg-indigo-500
                            text-white font-medium rounded-xl py-2.5

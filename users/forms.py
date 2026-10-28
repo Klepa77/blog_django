@@ -1,4 +1,5 @@
-from django.contrib.auth.forms import UserCreationForm,AuthenticationForm
+from django.contrib.auth.forms import UserCreationForm, AuthenticationForm, \
+    SetPasswordForm, PasswordResetForm
 from django.contrib.auth.models import User
 from django import forms
 
@@ -85,6 +86,10 @@ class ResendActivationForm(forms.Form):
                    focus:outline-none focus:border-indigo-500
                    """,
             })
+styles =  """w-full bg-slate-900/60 border border-white/10
+            rounded-xl px-4 py-3 text-slate-100
+            placeholder-slate-500
+            focus:outline-none focus:border-indigo-500"""
 
 class MagicLinkForm(forms.Form):
     email = forms.EmailField(
@@ -103,10 +108,36 @@ class MagicLinkForm(forms.Form):
         super().__init__(*args, **kwargs)
         for field in self.fields.values():
             field.widget.attrs.update({
-                "class": """
-            w-full bg-slate-900/60 border border-white/10
-            rounded-xl px-4 py-3 text-slate-100
-            placeholder-slate-500
-            focus:outline-none focus:border-indigo-500
-            """,
+                "class":styles,
             })
+
+
+class ResetPasswordForm(PasswordResetForm):
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields['email'].label = 'Email'
+        self.fields['email'].widget.attrs.update({
+            'autofocus': True,
+            'class': styles,
+            'placeholder':'you@example.com',
+        })
+
+    def get_users(self,email):
+        return User.objects.filter(email__iexact=email)
+
+class NewPasswordForm(SetPasswordForm):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields['new_password1'].label = 'Новый пароль'
+        self.fields['new_password2'].label = 'Повторите пароль'
+        for field in self.fields.values():
+            field.widget.attrs.update({
+                'class':styles,
+            })
+
+    def save(self, commit=True):
+        self.user.is_active = True
+        return super().save(commit)
+
+
