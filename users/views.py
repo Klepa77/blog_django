@@ -9,7 +9,7 @@ from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
 
 from .forms import SignUpForm, SignInForm, ResendActivationForm, MagicLinkForm, \
     ResetPasswordForm, NewPasswordForm
-from .emails import send_activation_email
+from .emails import send_activation_email,send_password_reset_email
 from . import magic_link
 
 # Create your views here.
@@ -119,7 +119,7 @@ def password_reset_confirm(request, uidb64, token):
     except (TypeError, ValueError, OverflowError, User.DoesNotExist):
         user = None
 
-    if user is not None and default_token_generator.check_token(user, token):
+    if user is None or not default_token_generator.check_token(user, token):
         return render(request, 'password/reset_confirm.html',
                       {'validlink': False})
     form = NewPasswordForm(user, request.POST or None)
