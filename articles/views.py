@@ -19,6 +19,7 @@ def home(request):
     sort = request.GET.get('sort')
     author = request.GET.get('author')
     favorite_only = request.GET.get('favorite')
+    like_only = request.GET.get('like')
     selected_author = User.objects.filter(
         pk=author).first() if author else None
 
@@ -34,6 +35,7 @@ def home(request):
         favorite_post_ids = Favorite.objects.filter(
             user=request.user).values_list('post_id', flat=True)
         posts = posts.filter(pk__in=favorite_post_ids)
+    posts= posts.filter(likes=request.user) if like_only else posts
     posts = posts.order_by('-date_created') if sort == 'new_first' else posts
     posts = posts.order_by('date_created') if sort == 'old_first' else posts
     posts = Post.objects.annotate(
