@@ -1,3 +1,4 @@
+from django.contrib.auth.decorators import login_required
 from django.contrib.auth.forms import PasswordResetForm
 from django.contrib.auth.models import User
 from django.contrib.auth.tokens import default_token_generator
@@ -8,9 +9,10 @@ from django.utils.encoding import force_str
 from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
 
 from .forms import SignUpForm, SignInForm, ResendActivationForm, MagicLinkForm, \
-    ResetPasswordForm, NewPasswordForm
-from .emails import send_activation_email,send_password_reset_email
+    ResetPasswordForm, NewPasswordForm, UserSettingsForm, ProfileForm
+from .emails import send_activation_email, send_password_reset_email
 from . import magic_link
+from .models import Profile
 
 # Create your views here.
 AUTH_BACKEND = 'users.backends.EmailOrUsernameBackend'
@@ -130,3 +132,24 @@ def password_reset_confirm(request, uidb64, token):
         return redirect('articles:home')
     return render(request, 'password/reset_confirm.html', {'form': form,
                                                            'validlink': True})
+
+
+@login_required(login_url='users:sign_in')
+def profile_settings(request):
+    profile, _ = Profile.objects.get_or_create(user=request.user)
+
+    user_form = UserSettingsForm(request.POST or None, instance=request.user)
+    profile_form = ProfileForm(request.POST or None, request.FILES or None,
+                               instance=profile)
+
+    if request.method == 'POST' and user_form.is_valid() and profile_form.is_valid():
+        user_form.save()
+        profile_form.save()
+        messages.success(request, 'Профиль сохранен')
+        return redirect('users:profile_settings')
+
+    return render(request, 'profile_settings.html',
+                  {'user_form': user_form,
+                   'profile_form': profile_form,
+                   'profile': profile}
+                  )
