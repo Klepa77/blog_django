@@ -1,10 +1,16 @@
 from django.contrib.auth.models import User
+from django.contrib.messages.context_processors import messages
+from django.core.signals import request_started
 from django.shortcuts import render, get_object_or_404, redirect
-from django.contrib.auth.decorators import login_required
+from django.contrib.auth.decorators import login_required, user_passes_test
+from django.utils import timezone
+from django.utils.http import url_has_allowed_host_and_scheme
+from django.views.decorators.http import require_POST
+
 from articles import forms
 from articles.models import *
 from django.db.models import Q, F, Count
-from django.http import HttpResponse, JsonResponse
+from django.http import HttpResponse, JsonResponse, Http404
 from django.core.paginator import Paginator
 from .utils import increment_views
 
@@ -23,7 +29,11 @@ def home(request):
     selected_author = User.objects.filter(
         pk=author).first() if author else None
 
-    posts = Post.objects.all().order_by('-date_created')
+    own_posts = bool(author) and str(request.user.pk) == author
+
+    posts = (Post.objects.all() if own_posts else
+             Post.objects.published).order_by(
+        '-date_created')
     hidden_authors = HiddenAuthor.objects.filter(
         user=request.user).values_list('author', flat=True)
     posts = posts.exclude(author__in=hidden_authors)
@@ -35,10 +45,10 @@ def home(request):
         favorite_post_ids = Favorite.objects.filter(
             user=request.user).values_list('post_id', flat=True)
         posts = posts.filter(pk__in=favorite_post_ids)
-    posts= posts.filter(likes=request.user) if like_only else posts
+    posts = posts.filter(likes=request.user) if like_only else posts
     posts = posts.order_by('-date_created') if sort == 'new_first' else posts
     posts = posts.order_by('date_created') if sort == 'old_first' else posts
-    posts = Post.objects.annotate(
+    posts = posts.annotate(
         comments_count=Count('comment'),
         popular=F('likes') * 5 - F('dislikes') * 5 + F(
             'comments_count') * 15 + F('views')
@@ -57,6 +67,7 @@ def home(request):
     return render(request,
                   'home.html',
                   {'posts': page_object,
+                   'own_posts': own_posts,
                    'categories': categories,
                    'category': category,
                    'search': search,
@@ -68,6 +79,8 @@ def home(request):
 
 def post(request, pk):
     post_data = get_object_or_404(Post, pk=pk)
+    if not post_data.can_view(request.user):
+        raise Http404
     comments = Comment.objects.filter(post=post_data, parent=None)
     is_favorite = post_data.favorite_set.filter(user=request.user).exists() \
         if request.user.is_authenticated else False
@@ -75,12 +88,14 @@ def post(request, pk):
         if request.user.is_authenticated else False
     increment_views(request, post_data)
 
+    published = {'status': Post.Status.PUBLISHED, }
+
     try:
-        next_post = post_data.get_next_by_date_created()
+        next_post = post_data.get_next_by_date_created(**published)
     except Post.DoesNotExist:
         next_post = None
     try:
-        prev_post = post_data.get_previous_by_date_created()
+        prev_post = post_data.get_previous_by_date_created(**published)
     except Post.DoesNotExist:
         prev_post = None
     return render(request, 'post.html',
@@ -95,6 +110,12 @@ def post_create(request):
     if request.method == 'POST' and form.is_valid():
         instance = form.save(commit=False)
         instance.author = request.user
+
+        if request.user.is_staff:
+            instance.status = Post.Status.PUBLISHED
+        else:
+            instance.status = Post.Status.PENDING
+
         instance.save()
         raw_tags = request.POST.get("tags", "")
         tag_objects = resolve_tags(raw_tags)
@@ -112,7 +133,14 @@ def post_edit(request, pk):
         return redirect('users:forbidden')
 
     if form.is_valid():
-        form.save()
+        instance = form.save(commit=False)
+        if not request.user.is_staff:
+            instance.status = Post.Status.PENDING
+            instance.moderation_note = ""
+        instance.save()
+        form.save_m2m()
+        if not instance.is_published:
+            messages.info(request, 'Изменения отправлены на модерацию')
         return redirect('articles:home')
     return render(
         request,
@@ -252,3 +280,59 @@ def show_hidden_authors(request):
     hidden_authors = HiddenAuthor.objects.filter(user=request.user)
     return render(request, 'hidden_authors.html',
                   {'hidden_authors': hidden_authors}, )
+
+
+def is_moderator(user):
+    return user.is_authenticated and user.is_staff
+
+
+def _back(request):
+    next_url = request.POST.get('next')
+    if next_url and url_has_allowed_host_and_scheme(next_url, allowed_hosts={
+        request.get_host()}):
+        return redirect(next_url)
+    return redirect('articles:moderation')
+
+
+
+
+@user_passes_test(is_moderator, login_url='users:sign_in')
+def moderation(request):
+    posts = (Post.objects.pending()
+             .select_related('author', 'category')
+             .order_by('date_created'))
+    return render(request, 'moderation.html', {'posts': posts})
+
+
+@require_POST
+@user_passes_test(is_moderator, login_url='users:sign_in')
+def moderation_approve(request, pk):
+    post_data = get_object_or_404(Post, pk=pk)
+    post_data.status = Post.Status.PUBLISHED
+    post_data.moderation_note = ""
+    post_data.moderated_by = request.user
+    post_data.moderated_at = timezone.now()
+    post_data.save(update_fields=['moderation_note', 'moderated_by',
+                                  'moderated_at', 'status'])
+    # Вызвать функцию оповещения автора по почте,
+    messages.success(request, f'{post_data.title} опубликован')
+    return _back(request)
+
+@require_POST
+@user_passes_test(is_moderator, login_url='users:sign_in')
+def moderation_reject(request, pk):
+    post_data = get_object_or_404(Post, pk=pk)
+    note = request.POST.get('note').strip()
+    if not note:
+        messages.error(request,'Укажите причину отказа')
+        return _back(request)
+
+    post_data.status = Post.Status.REJECTED
+    post_data.moderation_note = note
+    post_data.moderated_by = request.user
+    post_data.moderated_at = timezone.now()
+    post_data.save(update_fields=['moderation_note', 'moderated_by',
+                                  'moderated_at', 'status'])
+    # Вызвать функцию оповещения автора по почте,
+    messages.success(request, f'{post_data.title} отклонен')
+    return _back(request)

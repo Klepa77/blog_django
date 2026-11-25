@@ -20,6 +20,11 @@ urlpatterns=[
     path('favorite/<int:pk>',views.favorite,name='favorite'),
     path('hide_this_author/<int:pk>',views.hide_this_author,name='hide_this_author'),
     path('show_hidden_authors/',views.show_hidden_authors,name='show_hidden_authors'),
+    path('moderation/',views.moderation,name='moderation'),
+    path('moderation/<int:pk>/approve',views.moderation_approve,
+         name='moderation_approve'),
+    path('moderation/<int:pk>/reject',views.moderation_reject,
+         name='moderation_reject'),
 
 
 

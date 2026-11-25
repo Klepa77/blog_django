@@ -1,0 +1,54 @@
+{% extends "layout.html" %}
+{% load humanize %}
+
+{% block content %}
+<div class="max-w-3xl mx-auto px-4 py-10">
+
+    <div class="flex items-end justify-between gap-4 mb-8">
+        <div>
+            <h1 class="text-2xl font-semibold text-slate-100">Модерация</h1>
+            <p class="text-slate-400 text-sm mt-1">Посты, ожидающие проверки — сначала самые старые</p>
+        </div>
+        <span class="px-3 py-1 rounded-full bg-amber-500/15 border border-amber-500/30 text-amber-300 text-sm">
+            В очереди: {{ posts|length }}
+        </span>
+    </div>
+
+    {% for post in posts %}
+    <article class="bg-slate-800/60 border border-white/[0.08] rounded-2xl p-6 mb-5">
+
+        <div class="flex items-center gap-2 text-xs text-slate-500 mb-2">
+            <span class="text-slate-300">{{ post.author.username }}</span>
+            <span>·</span>
+            <span title="{{ post.date_created }}">{{ post.date_created|naturaltime }}</span>
+            {% if post.category %}
+            <span>·</span>
+            <span>{{ post.category }}</span>
+            {% endif %}
+            {% if post.moderated_at %}
+            <span class="ml-auto px-2 py-0.5 rounded-full bg-white/5 text-slate-400">после правки</span>
+            {% endif %}
+        </div>
+
+        <h2 class="text-lg font-semibold text-slate-100 mb-2">
+            <a href="{% url 'articles:post' post.pk %}" class="hover:text-indigo-300 transition-colors">
+                {{ post.title }}
+            </a>
+        </h2>
+
+        <p class="text-sm text-slate-400 leading-relaxed mb-5">
+            {{ post.text|striptags|truncatewords:45 }}
+        </p>
+
+        {% url 'articles:moderation' as queue_url %}
+        {% include "_moderation_actions.html" with next=queue_url %}
+
+    </article>
+    {% empty %}
+    <div class="text-center py-20 border border-dashed border-white/10 rounded-2xl">
+        <p class="text-slate-300 font-medium">Очередь пуста</p>
+        <p class="text-slate-500 text-sm mt-1">Новые посты появятся здесь автоматически</p>
+    </div>
+    {% endfor %}
+</div>
+{% endblock %}

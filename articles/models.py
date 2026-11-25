@@ -5,7 +5,20 @@ from django.db import models
 from django.utils.html import strip_tags
 
 
+class PostQuerySet(models.QuerySet):
+    def published(self):
+        return self.filter(status=Post.Status.PUBLISHED)
+
+    def pending(self):
+        return self.filter(status=Post.Status.PENDING)
+
+
 class Post(models.Model):
+    class Status(models.TextChoices):
+        PENDING = 'pending', 'На модерации'
+        PUBLISHED = 'published', 'Опубликовано'
+        REJECTED = 'rejected', 'Отклонен'
+
     title = models.CharField(max_length=255)
     text = models.TextField()
     date_created = models.DateTimeField(auto_now_add=True)
@@ -20,14 +33,30 @@ class Post(models.Model):
                                  on_delete=models.CASCADE)
     tags = models.ManyToManyField('articles.Tag', related_name='tags',
                                   blank=True)
-    views =models.PositiveIntegerField(default=0)
+    views = models.PositiveIntegerField(default=0)
+    status = models.CharField(max_length=10, choices=Status.choices,
+                              default=Status.PENDING, db_index=True)
+    moderation_note = models.TextField(blank=True)
+    moderated_by = models.ForeignKey(User, on_delete=models.CASCADE,
+                                     related_name="posts")
+    moderated_at = models.DateTimeField(auto_now_add=True)
+    objects = PostQuerySet.as_manager()
 
     @property
     def reading_time(self):
         words_per_minute = 200
         text = strip_tags(self.text)
         words_count = len(re.findall(r'\w+', text))
-        return max(1,round(words_count/words_per_minute))
+        return max(1, round(words_count / words_per_minute))
+
+    @property
+    def is_published(self):
+        return self.status == Post.Status.PUBLISHED
+
+    def can_view(self, user):
+        return (self.is_published or user.is_staff or (user.is_authenticated
+                                                       and
+                                                       user.pk == self.author_id))
 
     def __str__(self):
         return self.title
